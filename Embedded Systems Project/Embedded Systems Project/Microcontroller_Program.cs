@@ -1,7 +1,6 @@
-using System.Globalization;
+using Bulb;
 using System.IO.Ports;
 using System.Text;
-
 
 namespace Embedded_Systems_Project
 {
@@ -24,20 +23,28 @@ namespace Embedded_Systems_Project
 
         private static Byte instructionByte, firstByte, secondByte;
 
-        private static SerialPort serialPort = new(); //Create a new serial port
+        static SerialPort serialPort = new(); //Create a new serial port
 
         private bool COM_Selected = false;
         private bool Baud_Selected = false;
+        private bool SerialConnected = false;
 
         private ushort PORTC = 1;
         private char[] SevenSegDisplayChars = new char[2];
 
+        private LedBulb[] PORTA_lights;
 
+        /// <summary>
+        /// Constructor for BoardControlForm Class
+        /// </summary>
         public BoardControlForm()
         {
             InitializeComponent();
 
+            PORTA_lights = new LedBulb[8] { PA0, PA1, PA2, PA3, PA4, PA5, PA6, PA7 };
+
             string[] portNames = SerialPort.GetPortNames(); //Grab available ports
+
 
             int[] baudrates = { 4800, 9600, 19200, 38400, 57600, 115200, 230400, 460800, 921600 };
 
@@ -47,8 +54,11 @@ namespace Embedded_Systems_Project
 
         }
 
-
-        //Connect to serial
+        /// <summary>
+        /// Button event for connected to serial
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void ConnectButton_Click(object sender, EventArgs e)
         {
             SerialConnectionErrorLabel.Hide(); //Hide any error messages when the user trys to connect
@@ -69,9 +79,13 @@ namespace Embedded_Systems_Project
 
                     RefreshButton.Enabled = true; //Enable the refresh button
 
-                    //if (!testConnection()) throw new Exception("Connection Error");
-
-                    if (serialPort.IsOpen) SerialPortStatusBulb.On = true; //Turn connection status bulb on
+                    if (serialPort.IsOpen)
+                    {
+                        SerialPortStatusBulb.On = true; //Turn connection status bulb on
+                        PORTC_LIGHTS_TIMER.Enabled = true;
+                        POT1_TIMER.Enabled = true;
+                        POT2_TIMER.Enabled = true;
+                    }
                     else SerialPortStatusBulb.Blink(30); //Blink if there is an issue
 
                 }
@@ -82,40 +96,37 @@ namespace Embedded_Systems_Project
                 }
 
             }
+
         }
 
 
-        /// <summary>
-        /// Tests the connection with serial device by sending a test byte and waiting for the correct response
-        /// </summary>
-        /// <returns></returns>
-        private bool testConnection()
-        {
-            writeSerial(TXCHECK);
-            readSerial();
-            if (firstByte == '0' && secondByte == 'f') return true;
-            else return false;
-        }
 
         /// <summary>
         /// Reads from the serial port
         /// </summary>
-        public static void readSerial()
+        private void ReadSerial()
         {
-            Byte[] input; //Create array to store the input data
 
-            string bytes = serialPort.ReadTo("AA"); //Read the port to AA 
-            input = Encoding.UTF8.GetBytes(bytes); //Convert to bytes in an array
+            string inputLine = serialPort.ReadExisting();
 
-            if (input.Length > 0 && (input[0] == START_BYTE))
+            
+            if(inputLine != "") label18.Text = (string.Join("\n", System.Text.Encoding.Default.GetBytes(inputLine).Take(5)));
+
+
+
+            byte[] input = Encoding.Default.GetBytes(inputLine);
+
+            try
             {
-                instructionByte = input[1]; //Instruction byte
-                if (input[2] != STOP_BYTE)
+                if (input.Length > 4 && (input[0] == START_BYTE))
                 {
+                    instructionByte = input[1]; //Instruction byte
                     firstByte = input[2];  //First data byte
                     secondByte = input[3]; //Second data byte
                 }
             }
+            catch { }
+
         }
 
         /// <summary>
@@ -124,8 +135,12 @@ namespace Embedded_Systems_Project
         /// <param name="instruction"></param>
         public static void writeSerial(Byte instruction)
         {
-            string output = START_BYTE.ToString() + instruction.ToString() + STOP_BYTE.ToString();
+
+            byte[] bytes = { START_BYTE, instruction, STOP_BYTE };
+            string output = System.Text.Encoding.Default.GetString(bytes);
+
             serialPort.Write(output);
+
         }
 
         /// <summary>
@@ -134,21 +149,22 @@ namespace Embedded_Systems_Project
         /// <param name="instruction"></param>
         /// <param name="firstByte"></param>
         /// <param name="secondByte"></param>
-        public static void writeSerial(Byte instruction, string firstByte, string secondByte)
+        public static void writeSerial(Byte instruction, byte firstByte, byte secondByte)
         {
-            string output = START_BYTE.ToString() + //Send the start byte
-                            instruction.ToString() + //Send the instruction
-                            firstByte + //Send the first byte
-                            secondByte + //Send the second byte
-                            STOP_BYTE.ToString();
-            serialPort.Write(output);
+            byte[] bytes = {START_BYTE , //Send the start byte
+                            instruction , //Send the instruction
+                            firstByte , //Send the first byte
+                            secondByte , //Send the second byte
+                            STOP_BYTE };
+
+            string output = System.Text.Encoding.Default.GetString(bytes);
+            serialPort.WriteLine(output);
         }
 
 
         //Disconnect from serial
         private void DisconnectButton_Click(object sender, EventArgs e)
         {
-
             serialPort.Close();
             SerialPortStatusBulb.On = false;
 
@@ -157,11 +173,16 @@ namespace Embedded_Systems_Project
 
             RefreshButton.Enabled = false;
 
+            PORTC_LIGHTS_TIMER.Enabled = false;
+            POT1_TIMER.Enabled = false;
+            POT2_TIMER.Enabled = false;
+
         }
 
         private void COM_Port_Dropdown_SelectedIndexChanged(object sender, EventArgs e)
         {
             COM_Selected = true;
+
         }
 
         private void BaudrateSelection_SelectedIndexChanged(object sender, EventArgs e)
@@ -173,7 +194,6 @@ namespace Embedded_Systems_Project
         {
 
         }
-
 
         //
         // Control the seven segment display
@@ -257,20 +277,69 @@ namespace Embedded_Systems_Project
             SevenSegDisplayChars[1] = portC_hex[1];
             sevenSeg_1.Value = SevenSegDisplayChars[0].ToString();
             sevenSeg_2.Value = SevenSegDisplayChars[1].ToString();
+
+
         }
 
         private void RefreshButton_Click(object sender, EventArgs e)
         {
-            writeSerial(SET_PORTC, SevenSegDisplayChars[0].ToString(), SevenSegDisplayChars[0].ToString());
 
-            SentData.Text = SET_PORTC.ToString() + binToHex(SevenSegDisplayChars[0].ToString()) + binToHex(SevenSegDisplayChars[0].ToString());
-
+                writeSerial(SET_PORTC, (byte)SevenSegDisplayChars[0], (byte)SevenSegDisplayChars[0]);
+  
 
         }
 
-        private string binToHex(string bin)
+        private void Set_PORTA_Lights(char val)
         {
-            return Convert.ToInt32(bin, 2).ToString("X");
+            int intValue = (int)val;
+            for (int i = 0; i < 8; i++)
+            {
+                if (((intValue >> i) & 0x01) == 1)
+                {
+                    PORTA_lights[i].On = true;
+                }
+                else
+                {
+                    PORTA_lights[i].On = false;
+                }
+            }
+        }
+
+        private void PORTC_LIGHTS_TIMER_Tick(object sender, EventArgs e)
+        {
+            writeSerial(READ_PINA);
+            ReadSerial();
+
+            if (instructionByte == READ_PINA)
+            {
+                Set_PORTA_Lights((char)secondByte);
+            }
+        }
+
+        private void POT1_TIMER_Tick(object sender, EventArgs e)
+        {
+            writeSerial(READ_POT1);
+            ReadSerial();
+
+            if (instructionByte == READ_POT1)
+            {
+                float val = secondByte << 8 | firstByte;
+                PotGauge1.Value = val;
+                PotGauge1.Refresh();
+            }
+        }
+
+        private void POT2_TIMER_Tick(object sender, EventArgs e)
+        {
+            writeSerial(READ_POT2);
+            ReadSerial();
+
+            if (instructionByte == READ_POT2)
+            {
+                float val = secondByte << 8 | firstByte;
+                PotGauge2.Value = val;
+                PotGauge2.Refresh();
+            }
         }
     }
 }

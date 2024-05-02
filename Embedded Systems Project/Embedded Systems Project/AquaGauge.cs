@@ -1,10 +1,4 @@
-using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Drawing;
-using System.Data;
-using System.Text;
-using System.Windows.Forms;
 using System.Drawing.Drawing2D;
 
 namespace AquaControls
@@ -53,7 +47,7 @@ namespace AquaControls
             this.SetStyle(ControlStyles.ResizeRedraw, true);
             this.SetStyle(ControlStyles.AllPaintingInWmPaint, true);
             this.SetStyle(ControlStyles.UserPaint, true);
-            this.SetStyle(ControlStyles.OptimizedDoubleBuffer, true);                     
+            this.SetStyle(ControlStyles.OptimizedDoubleBuffer, true);
             this.BackColor = Color.Transparent;
             this.Resize += new EventHandler(AquaGauge_Resize);
             this.requiresRedraw = true;
@@ -135,7 +129,7 @@ namespace AquaControls
             get { return recommendedValue; }
             set
             {
-                if (value > minValue && value < maxValue) 
+                if (value > minValue && value < maxValue)
                 {
                     recommendedValue = value;
                     requiresRedraw = true;
@@ -191,9 +185,9 @@ namespace AquaControls
             set
             {
                 float val = value;
-                if(val > 100) 
+                if (val > 100)
                     value = 100;
-                if(val < 0)
+                if (val < 0)
                     value = 0;
                 glossinessAlpha = (value * 220) / 100;
                 this.Refresh();
@@ -267,7 +261,7 @@ namespace AquaControls
                 this.enableTransparentBackground = value;
                 this.SetStyle(ControlStyles.OptimizedDoubleBuffer, !enableTransparentBackground);
                 requiresRedraw = true;
-                this.Refresh();  
+                this.Refresh();
             }
         }
         #endregion
@@ -280,11 +274,11 @@ namespace AquaControls
         protected override void OnPaint(PaintEventArgs e)
         {
             e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
-            width = this.Width - x*2;
-            height = this.Height - y*2;
+            width = this.Width - x * 2;
+            height = this.Height - y * 2;
             DrawPointer(e.Graphics, ((width) / 2) + x, ((height) / 2) + y);
         }
-                
+
         /// <summary>
         /// Draws the dial background.
         /// </summary>
@@ -294,10 +288,10 @@ namespace AquaControls
             if (!enableTransparentBackground)
             {
                 base.OnPaintBackground(e);
-            }         
-            
+            }
+
             e.Graphics.SmoothingMode = SmoothingMode.HighQuality;
-            e.Graphics.FillRectangle(new SolidBrush(Color.Transparent), new Rectangle(0,0,Width,Height));
+            e.Graphics.FillRectangle(new SolidBrush(Color.Transparent), new Rectangle(0, 0, Width, Height));
             if (backgroundImg == null || requiresRedraw)
             {
                 backgroundImg = new Bitmap(this.Width, this.Height);
@@ -482,7 +476,7 @@ namespace AquaControls
         {
             float shift = Width / 5;
             RectangleF rectangle = new RectangleF(cX - (shift / 2), cY - (shift / 2), shift, shift);
-            LinearGradientBrush brush = new LinearGradientBrush(rect, Color.Black, Color.FromArgb(100,this.dialColor), LinearGradientMode.Vertical);
+            LinearGradientBrush brush = new LinearGradientBrush(rect, Color.Black, Color.FromArgb(100, this.dialColor), LinearGradientMode.Vertical);
             g.FillEllipse(brush, rectangle);
 
             shift = Width / 7;
@@ -506,28 +500,28 @@ namespace AquaControls
             int gap = (int)(this.Width * 0.01F);
             float shift = this.Width / 25;
             Rectangle rectangle = new Rectangle(rect.Left + gap, rect.Top + gap, rect.Width - gap, rect.Height - gap);
-                                   
-            float x,y,x1,y1,tx,ty,radius;
-            radius = rectangle.Width/2 - gap*5;
+
+            float x, y, x1, y1, tx, ty, radius;
+            radius = rectangle.Width / 2 - gap * 5;
             float totalAngle = toAngle - fromAngle;
             float incr = GetRadian(((totalAngle) / ((noOfParts - 1) * (noOfIntermediates + 1))));
-            
-            Pen thickPen = new Pen(Color.Black, Width/50);
-            Pen thinPen = new Pen(Color.Black, Width/100);
+
+            Pen thickPen = new Pen(Color.Black, Width / 50);
+            Pen thinPen = new Pen(Color.Black, Width / 100);
             float rulerValue = MinValue;
             for (int i = 0; i <= noOfParts; i++)
             {
                 //Draw Thick Line
                 x = (float)(cX + radius * Math.Cos(currentAngle));
                 y = (float)(cY + radius * Math.Sin(currentAngle));
-                x1 = (float)(cX + (radius - Width/20) * Math.Cos(currentAngle));
-                y1 = (float)(cY + (radius - Width/20) * Math.Sin(currentAngle));
+                x1 = (float)(cX + (radius - Width / 20) * Math.Cos(currentAngle));
+                y1 = (float)(cY + (radius - Width / 20) * Math.Sin(currentAngle));
                 g.DrawLine(thickPen, x, y, x1, y1);
-                
+
                 //Draw Strings
                 StringFormat format = new StringFormat();
                 tx = (float)(cX + (radius - Width / 10) * Math.Cos(currentAngle));
-                ty = (float)(cY-shift + (radius - Width / 10) * Math.Sin(currentAngle));
+                ty = (float)(cY - shift + (radius - Width / 10) * Math.Sin(currentAngle));
                 Brush stringPen = new SolidBrush(this.ForeColor);
                 StringFormat strFormat = new StringFormat(StringFormatFlags.NoClip);
                 strFormat.Alignment = StringAlignment.Center;
@@ -535,9 +529,9 @@ namespace AquaControls
                 g.DrawString(rulerValue.ToString() + "", f, stringPen, new PointF(tx, ty), strFormat);
                 rulerValue += (float)((MaxValue - MinValue) / (noOfParts - 1));
                 rulerValue = (float)Math.Round(rulerValue, 2);
-                
+
                 //currentAngle += incr;
-                if (i == noOfParts -1)
+                if (i == noOfParts - 1)
                     break;
                 for (int j = 0; j <= noOfIntermediates; j++)
                 {
@@ -545,9 +539,9 @@ namespace AquaControls
                     currentAngle += incr;
                     x = (float)(cX + radius * Math.Cos(currentAngle));
                     y = (float)(cY + radius * Math.Sin(currentAngle));
-                    x1 = (float)(cX + (radius - Width/50) * Math.Cos(currentAngle));
-                    y1 = (float)(cY + (radius - Width/50) * Math.Sin(currentAngle));
-                    g.DrawLine(thinPen, x, y, x1, y1);                    
+                    x1 = (float)(cX + (radius - Width / 50) * Math.Cos(currentAngle));
+                    y1 = (float)(cY + (radius - Width / 50) * Math.Sin(currentAngle));
+                    g.DrawLine(thinPen, x, y, x1, y1);
                 }
             }
         }
@@ -574,10 +568,10 @@ namespace AquaControls
             {
                 string num = number.ToString("000.00");
                 num.PadLeft(3, '0');
-                float shift = 0; 
+                float shift = 0;
                 if (number < 0)
                 {
-                    shift -= width/17;
+                    shift -= width / 17;
                 }
                 bool drawDPS = false;
                 char[] chars = num.ToCharArray();
@@ -622,8 +616,8 @@ namespace AquaControls
         private void DrawDigit(Graphics g, int number, PointF position, bool dp, float height)
         {
             float width;
-            width = 10F * height/13;
-            
+            width = 10F * height / 13;
+
             Pen outline = new Pen(Color.FromArgb(40, this.dialColor));
             Pen fillPen = new Pen(Color.Black);
 
@@ -633,35 +627,35 @@ namespace AquaControls
             segmentA[0] = segmentA[4] = new PointF(position.X + GetX(2.8F, width), position.Y + GetY(1F, height));
             segmentA[1] = new PointF(position.X + GetX(10, width), position.Y + GetY(1F, height));
             segmentA[2] = new PointF(position.X + GetX(8.8F, width), position.Y + GetY(2F, height));
-            segmentA[3] = new PointF(position.X + GetX(3.8F, width), position.Y + GetY(2F, height));            
+            segmentA[3] = new PointF(position.X + GetX(3.8F, width), position.Y + GetY(2F, height));
 
             //Segment B
             PointF[] segmentB = new PointF[5];
             segmentB[0] = segmentB[4] = new PointF(position.X + GetX(10, width), position.Y + GetY(1.4F, height));
             segmentB[1] = new PointF(position.X + GetX(9.3F, width), position.Y + GetY(6.8F, height));
             segmentB[2] = new PointF(position.X + GetX(8.4F, width), position.Y + GetY(6.4F, height));
-            segmentB[3] = new PointF(position.X + GetX(9F, width), position.Y + GetY(2.2F, height)); 
+            segmentB[3] = new PointF(position.X + GetX(9F, width), position.Y + GetY(2.2F, height));
 
             //Segment C
             PointF[] segmentC = new PointF[5];
             segmentC[0] = segmentC[4] = new PointF(position.X + GetX(9.2F, width), position.Y + GetY(7.2F, height));
             segmentC[1] = new PointF(position.X + GetX(8.7F, width), position.Y + GetY(12.7F, height));
             segmentC[2] = new PointF(position.X + GetX(7.6F, width), position.Y + GetY(11.9F, height));
-            segmentC[3] = new PointF(position.X + GetX(8.2F, width), position.Y + GetY(7.7F, height)); 
+            segmentC[3] = new PointF(position.X + GetX(8.2F, width), position.Y + GetY(7.7F, height));
 
             //Segment D
             PointF[] segmentD = new PointF[5];
             segmentD[0] = segmentD[4] = new PointF(position.X + GetX(7.4F, width), position.Y + GetY(12.1F, height));
             segmentD[1] = new PointF(position.X + GetX(8.4F, width), position.Y + GetY(13F, height));
             segmentD[2] = new PointF(position.X + GetX(1.3F, width), position.Y + GetY(13F, height));
-            segmentD[3] = new PointF(position.X + GetX(2.2F, width), position.Y + GetY(12.1F, height)); 
+            segmentD[3] = new PointF(position.X + GetX(2.2F, width), position.Y + GetY(12.1F, height));
 
             //Segment E
             PointF[] segmentE = new PointF[5];
             segmentE[0] = segmentE[4] = new PointF(position.X + GetX(2.2F, width), position.Y + GetY(11.8F, height));
             segmentE[1] = new PointF(position.X + GetX(1F, width), position.Y + GetY(12.7F, height));
             segmentE[2] = new PointF(position.X + GetX(1.7F, width), position.Y + GetY(7.2F, height));
-            segmentE[3] = new PointF(position.X + GetX(2.8F, width), position.Y + GetY(7.7F, height)); 
+            segmentE[3] = new PointF(position.X + GetX(2.8F, width), position.Y + GetY(7.7F, height));
 
             //Segment F
             PointF[] segmentF = new PointF[5];
@@ -735,15 +729,15 @@ namespace AquaControls
                 g.FillPolygon(fillPen.Brush, segmentG);
             }
             #endregion
-            
+
             //Draw decimal point
             if (dp)
             {
                 g.FillEllipse(fillPen.Brush, new RectangleF(
-                    position.X + GetX(10F, width), 
+                    position.X + GetX(10F, width),
                     position.Y + GetY(12F, height),
-                    width/7, 
-                    width/7));
+                    width / 7,
+                    width / 7));
             }
         }
 
@@ -787,7 +781,7 @@ namespace AquaControls
             }
             return false;
         }
-        
+
         /// <summary>
         /// Restricts the size to make sure the height and width are always same.
         /// </summary>

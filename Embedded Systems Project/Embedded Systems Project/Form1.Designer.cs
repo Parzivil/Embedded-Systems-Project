@@ -60,7 +60,6 @@ namespace Embedded_Systems_Project
             TabController = new TabControl();
             SetupTabPage = new TabPage();
             DigitalPage = new TabPage();
-            SentData = new Label();
             sevenSeg_2 = new SevenSegment();
             label12 = new Label();
             label13 = new Label();
@@ -70,14 +69,14 @@ namespace Embedded_Systems_Project
             label10 = new Label();
             label9 = new Label();
             label8 = new Label();
-            ledBulb6 = new LedBulb();
-            ledBulb7 = new LedBulb();
-            ledBulb8 = new LedBulb();
-            ledBulb9 = new LedBulb();
-            ledBulb4 = new LedBulb();
-            ledBulb5 = new LedBulb();
-            ledBulb3 = new LedBulb();
-            ledBulb2 = new LedBulb();
+            PA7 = new LedBulb();
+            PA6 = new LedBulb();
+            PA5 = new LedBulb();
+            PA4 = new LedBulb();
+            PA3 = new LedBulb();
+            PA2 = new LedBulb();
+            PA1 = new LedBulb();
+            PA0 = new LedBulb();
             label6 = new Label();
             RefreshButton = new Button();
             label5 = new Label();
@@ -94,10 +93,13 @@ namespace Embedded_Systems_Project
             PotsGroup = new GroupBox();
             label17 = new Label();
             label16 = new Label();
-            aquaGauge2 = new AquaGauge();
-            aquaGauge1 = new AquaGauge();
+            PotGauge2 = new AquaGauge();
+            PotGauge1 = new AquaGauge();
             TempPage = new TabPage();
-            timer1 = new System.Windows.Forms.Timer(components);
+            PORTC_LIGHTS_TIMER = new System.Windows.Forms.Timer(components);
+            POT1_TIMER = new System.Windows.Forms.Timer(components);
+            POT2_TIMER = new System.Windows.Forms.Timer(components);
+            label18 = new Label();
             SerialPortBox.SuspendLayout();
             DatabaseGroup.SuspendLayout();
             TabController.SuspendLayout();
@@ -367,7 +369,6 @@ namespace Embedded_Systems_Project
             // 
             // DigitalPage
             // 
-            DigitalPage.Controls.Add(SentData);
             DigitalPage.Controls.Add(sevenSeg_2);
             DigitalPage.Controls.Add(label12);
             DigitalPage.Controls.Add(label13);
@@ -377,14 +378,14 @@ namespace Embedded_Systems_Project
             DigitalPage.Controls.Add(label10);
             DigitalPage.Controls.Add(label9);
             DigitalPage.Controls.Add(label8);
-            DigitalPage.Controls.Add(ledBulb6);
-            DigitalPage.Controls.Add(ledBulb7);
-            DigitalPage.Controls.Add(ledBulb8);
-            DigitalPage.Controls.Add(ledBulb9);
-            DigitalPage.Controls.Add(ledBulb4);
-            DigitalPage.Controls.Add(ledBulb5);
-            DigitalPage.Controls.Add(ledBulb3);
-            DigitalPage.Controls.Add(ledBulb2);
+            DigitalPage.Controls.Add(PA7);
+            DigitalPage.Controls.Add(PA6);
+            DigitalPage.Controls.Add(PA5);
+            DigitalPage.Controls.Add(PA4);
+            DigitalPage.Controls.Add(PA3);
+            DigitalPage.Controls.Add(PA2);
+            DigitalPage.Controls.Add(PA1);
+            DigitalPage.Controls.Add(PA0);
             DigitalPage.Controls.Add(label6);
             DigitalPage.Controls.Add(RefreshButton);
             DigitalPage.Controls.Add(label5);
@@ -404,16 +405,6 @@ namespace Embedded_Systems_Project
             DigitalPage.TabIndex = 1;
             DigitalPage.Text = "Digital I/O";
             DigitalPage.UseVisualStyleBackColor = true;
-            DigitalPage.Click += DigitalPage_Click;
-            // 
-            // SentData
-            // 
-            SentData.AutoSize = true;
-            SentData.Location = new Point(302, 410);
-            SentData.Name = "SentData";
-            SentData.Size = new Size(44, 15);
-            SentData.TabIndex = 28;
-            SentData.Text = "label18";
             // 
             // sevenSeg_2
             // 
@@ -513,69 +504,69 @@ namespace Embedded_Systems_Project
             label8.TabIndex = 19;
             label8.Text = "PA0";
             // 
-            // ledBulb6
+            // PA7
             // 
-            ledBulb6.Location = new Point(81, 350);
-            ledBulb6.Name = "ledBulb6";
-            ledBulb6.On = false;
-            ledBulb6.Size = new Size(20, 20);
-            ledBulb6.TabIndex = 18;
+            PA7.Location = new Point(81, 350);
+            PA7.Name = "PA7";
+            PA7.On = false;
+            PA7.Size = new Size(20, 20);
+            PA7.TabIndex = 18;
             // 
-            // ledBulb7
+            // PA6
             // 
-            ledBulb7.Location = new Point(81, 324);
-            ledBulb7.Name = "ledBulb7";
-            ledBulb7.On = false;
-            ledBulb7.Size = new Size(20, 20);
-            ledBulb7.TabIndex = 17;
+            PA6.Location = new Point(81, 324);
+            PA6.Name = "PA6";
+            PA6.On = false;
+            PA6.Size = new Size(20, 20);
+            PA6.TabIndex = 17;
             // 
-            // ledBulb8
+            // PA5
             // 
-            ledBulb8.Location = new Point(81, 298);
-            ledBulb8.Name = "ledBulb8";
-            ledBulb8.On = false;
-            ledBulb8.Size = new Size(20, 20);
-            ledBulb8.TabIndex = 16;
+            PA5.Location = new Point(81, 298);
+            PA5.Name = "PA5";
+            PA5.On = false;
+            PA5.Size = new Size(20, 20);
+            PA5.TabIndex = 16;
             // 
-            // ledBulb9
+            // PA4
             // 
-            ledBulb9.Location = new Point(81, 272);
-            ledBulb9.Name = "ledBulb9";
-            ledBulb9.On = false;
-            ledBulb9.Size = new Size(20, 20);
-            ledBulb9.TabIndex = 15;
+            PA4.Location = new Point(81, 272);
+            PA4.Name = "PA4";
+            PA4.On = false;
+            PA4.Size = new Size(20, 20);
+            PA4.TabIndex = 15;
             // 
-            // ledBulb4
+            // PA3
             // 
-            ledBulb4.Location = new Point(81, 246);
-            ledBulb4.Name = "ledBulb4";
-            ledBulb4.On = false;
-            ledBulb4.Size = new Size(20, 20);
-            ledBulb4.TabIndex = 14;
+            PA3.Location = new Point(81, 246);
+            PA3.Name = "PA3";
+            PA3.On = false;
+            PA3.Size = new Size(20, 20);
+            PA3.TabIndex = 14;
             // 
-            // ledBulb5
+            // PA2
             // 
-            ledBulb5.Location = new Point(81, 220);
-            ledBulb5.Name = "ledBulb5";
-            ledBulb5.On = false;
-            ledBulb5.Size = new Size(20, 20);
-            ledBulb5.TabIndex = 13;
+            PA2.Location = new Point(81, 220);
+            PA2.Name = "PA2";
+            PA2.On = false;
+            PA2.Size = new Size(20, 20);
+            PA2.TabIndex = 13;
             // 
-            // ledBulb3
+            // PA1
             // 
-            ledBulb3.Location = new Point(81, 194);
-            ledBulb3.Name = "ledBulb3";
-            ledBulb3.On = false;
-            ledBulb3.Size = new Size(20, 20);
-            ledBulb3.TabIndex = 12;
+            PA1.Location = new Point(81, 194);
+            PA1.Name = "PA1";
+            PA1.On = false;
+            PA1.Size = new Size(20, 20);
+            PA1.TabIndex = 12;
             // 
-            // ledBulb2
+            // PA0
             // 
-            ledBulb2.Location = new Point(81, 168);
-            ledBulb2.Name = "ledBulb2";
-            ledBulb2.On = false;
-            ledBulb2.Size = new Size(20, 20);
-            ledBulb2.TabIndex = 11;
+            PA0.Location = new Point(81, 168);
+            PA0.Name = "PA0";
+            PA0.On = false;
+            PA0.Size = new Size(20, 20);
+            PA0.TabIndex = 11;
             // 
             // label6
             // 
@@ -716,6 +707,7 @@ namespace Embedded_Systems_Project
             // 
             // PortLightsPage
             // 
+            PortLightsPage.Controls.Add(label18);
             PortLightsPage.Controls.Add(PotsGroup);
             PortLightsPage.Location = new Point(4, 24);
             PortLightsPage.Name = "PortLightsPage";
@@ -729,8 +721,8 @@ namespace Embedded_Systems_Project
             // 
             PotsGroup.Controls.Add(label17);
             PotsGroup.Controls.Add(label16);
-            PotsGroup.Controls.Add(aquaGauge2);
-            PotsGroup.Controls.Add(aquaGauge1);
+            PotsGroup.Controls.Add(PotGauge2);
+            PotsGroup.Controls.Add(PotGauge1);
             PotsGroup.Location = new Point(6, 6);
             PotsGroup.Name = "PotsGroup";
             PotsGroup.Size = new Size(373, 276);
@@ -758,39 +750,39 @@ namespace Embedded_Systems_Project
             label16.TabIndex = 2;
             label16.Text = "Pot 1 Voltage";
             // 
-            // aquaGauge2
+            // PotGauge2
             // 
-            aquaGauge2.BackColor = Color.Transparent;
-            aquaGauge2.DialColor = Color.Lavender;
-            aquaGauge2.DialText = "Potential Meter 2";
-            aquaGauge2.Glossiness = 11.363636F;
-            aquaGauge2.Location = new Point(191, 97);
-            aquaGauge2.Margin = new Padding(4, 3, 4, 3);
-            aquaGauge2.MaxValue = 5F;
-            aquaGauge2.MinValue = 0F;
-            aquaGauge2.Name = "aquaGauge2";
-            aquaGauge2.RecommendedValue = 0F;
-            aquaGauge2.Size = new Size(175, 173);
-            aquaGauge2.TabIndex = 1;
-            aquaGauge2.ThresholdPercent = 0F;
-            aquaGauge2.Value = 0F;
+            PotGauge2.BackColor = Color.Transparent;
+            PotGauge2.DialColor = Color.Lavender;
+            PotGauge2.DialText = "Potential Meter 2";
+            PotGauge2.Glossiness = 11.363636F;
+            PotGauge2.Location = new Point(191, 97);
+            PotGauge2.Margin = new Padding(4, 3, 4, 3);
+            PotGauge2.MaxValue = 65536F;
+            PotGauge2.MinValue = 0F;
+            PotGauge2.Name = "PotGauge2";
+            PotGauge2.RecommendedValue = 0F;
+            PotGauge2.Size = new Size(175, 173);
+            PotGauge2.TabIndex = 1;
+            PotGauge2.ThresholdPercent = 0F;
+            PotGauge2.Value = 0F;
             // 
-            // aquaGauge1
+            // PotGauge1
             // 
-            aquaGauge1.BackColor = Color.Transparent;
-            aquaGauge1.DialColor = Color.Lavender;
-            aquaGauge1.DialText = "Potential Meter 1";
-            aquaGauge1.Glossiness = 11.363636F;
-            aquaGauge1.Location = new Point(7, 97);
-            aquaGauge1.Margin = new Padding(4, 3, 4, 3);
-            aquaGauge1.MaxValue = 5F;
-            aquaGauge1.MinValue = 0F;
-            aquaGauge1.Name = "aquaGauge1";
-            aquaGauge1.RecommendedValue = 0F;
-            aquaGauge1.Size = new Size(175, 173);
-            aquaGauge1.TabIndex = 0;
-            aquaGauge1.ThresholdPercent = 0F;
-            aquaGauge1.Value = 0F;
+            PotGauge1.BackColor = Color.Transparent;
+            PotGauge1.DialColor = Color.Lavender;
+            PotGauge1.DialText = "Potential Meter 1";
+            PotGauge1.Glossiness = 11.363636F;
+            PotGauge1.Location = new Point(7, 97);
+            PotGauge1.Margin = new Padding(4, 3, 4, 3);
+            PotGauge1.MaxValue = 65536F;
+            PotGauge1.MinValue = 0F;
+            PotGauge1.Name = "PotGauge1";
+            PotGauge1.RecommendedValue = 0F;
+            PotGauge1.Size = new Size(175, 173);
+            PotGauge1.TabIndex = 0;
+            PotGauge1.ThresholdPercent = 0F;
+            PotGauge1.Value = 0F;
             // 
             // TempPage
             // 
@@ -801,6 +793,29 @@ namespace Embedded_Systems_Project
             TempPage.TabIndex = 3;
             TempPage.Text = "Temp Control";
             TempPage.UseVisualStyleBackColor = true;
+            // 
+            // PORTC_LIGHTS_TIMER
+            // 
+            PORTC_LIGHTS_TIMER.Tick += PORTC_LIGHTS_TIMER_Tick;
+            // 
+            // POT1_TIMER
+            // 
+            POT1_TIMER.Interval = 10;
+            POT1_TIMER.Tick += POT1_TIMER_Tick;
+            // 
+            // POT2_TIMER
+            // 
+            POT2_TIMER.Interval = 11;
+            POT2_TIMER.Tick += POT2_TIMER_Tick;
+            // 
+            // label18
+            // 
+            label18.AutoSize = true;
+            label18.Location = new Point(75, 377);
+            label18.Name = "label18";
+            label18.Size = new Size(44, 15);
+            label18.TabIndex = 2;
+            label18.Text = "label18";
             // 
             // BoardControlForm
             // 
@@ -821,6 +836,7 @@ namespace Embedded_Systems_Project
             DigitalPage.ResumeLayout(false);
             DigitalPage.PerformLayout();
             PortLightsPage.ResumeLayout(false);
+            PortLightsPage.PerformLayout();
             PotsGroup.ResumeLayout(false);
             PotsGroup.PerformLayout();
             ResumeLayout(false);
@@ -888,9 +904,20 @@ namespace Embedded_Systems_Project
         private GroupBox PotsGroup;
         private Label label17;
         private Label label16;
-        private AquaGauge aquaGauge2;
-        private AquaGauge aquaGauge1;
-        private Label SentData;
+        private AquaGauge PotGauge2;
+        private AquaGauge PotGauge1;
         private System.Windows.Forms.Timer timer1;
+        private LedBulb PA0;
+        private LedBulb PA7;
+        private LedBulb PA6;
+        private LedBulb PA5;
+        private LedBulb PA4;
+        private LedBulb PA3;
+        private LedBulb PA2;
+        private LedBulb PA1;
+        private System.Windows.Forms.Timer PORTC_LIGHTS_TIMER;
+        private System.Windows.Forms.Timer POT1_TIMER;
+        private System.Windows.Forms.Timer POT2_TIMER;
+        public Label label18;
     }
 }

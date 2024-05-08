@@ -10,6 +10,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Embedded Systems Project.componentinfo.xml" />
     <None Remove="main.c" />
   </ItemGroup>
 

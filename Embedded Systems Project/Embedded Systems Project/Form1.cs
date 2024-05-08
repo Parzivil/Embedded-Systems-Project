@@ -1,27 +1,31 @@
 using Bulb;
 using System.IO.Ports;
-using System.Text;
 
 namespace Embedded_Systems_Project
 {
     public partial class BoardControlForm : Form
     {
-        public const Byte TXCHECK = 0x00;
-        public const Byte READ_PINA = 0x01;
-        public const Byte READ_POT1 = 0x02;
-        public const Byte READ_POT2 = 0x03;
-        public const Byte READ_TEMP = 0x04;
-        public const Byte READ_LIGHT = 0x05;
 
-        public const Byte SET_PORTC = 0x0A;
-        public const Byte SET_HEATER = 0x0B;
-        public const Byte SET_LIGHT = 0x0C;
-        public const Byte SET_MOTOR = 0x0D;
+        //Read instruction bytes
+        public const byte TXCHECK = 0x00;
+        public const byte READ_PINA = 0x01;
+        public const byte READ_POT1 = 0x02;
+        public const byte READ_POT2 = 0x03;
+        public const byte READ_TEMP = 0x04;
+        public const byte READ_LIGHT = 0x05;
 
-        public const Byte START_BYTE = 0x53;
-        public const Byte STOP_BYTE = 0xAA;
+        //Write instruction bytes
+        public const byte SET_PORTC = 0x0A;
+        public const byte SET_HEATER = 0x0B;
+        public const byte SET_LIGHT = 0x0C;
+        public const byte SET_MOTOR = 0x0D;
 
-        private static Byte instructionByte, firstByte, secondByte;
+        //Start and stop instruction bytes
+        public const byte START_BYTE = 0x53;
+        public const byte STOP_BYTE = 0xAA;
+
+        //byte variables to store the incoming bytes
+        private static byte instructionByte, firstByte, secondByte;
 
         static SerialPort serialPort = new(); //Create a new serial port
 
@@ -29,7 +33,7 @@ namespace Embedded_Systems_Project
         private bool Baud_Selected = false;
         private bool SerialConnected = false;
 
-        private ushort PORTC = 1;
+        private ushort PORTC = 0x0000;
         private char[] SevenSegDisplayChars = new char[2];
 
         private LedBulb[] PORTA_lights;
@@ -48,9 +52,9 @@ namespace Embedded_Systems_Project
 
             int[] baudrates = { 4800, 9600, 19200, 38400, 57600, 115200, 230400, 460800, 921600 };
 
-            foreach (string portName in portNames) COM_Port_Dropdown.Items.Add(portName); //Add ports to list
+            foreach (string portName in portNames) _ = COM_Port_Dropdown.Items.Add(portName); //Add ports to list
 
-            foreach (int baudrate in baudrates) BaudrateSelection.Items.Add(baudrate); //Add Baud rates to list
+            foreach (int baudrate in baudrates) _ = BaudrateSelection.Items.Add(baudrate); //Add Baud rates to list
 
         }
 
@@ -82,9 +86,6 @@ namespace Embedded_Systems_Project
                     if (serialPort.IsOpen)
                     {
                         SerialPortStatusBulb.On = true; //Turn connection status bulb on
-                        PORTC_LIGHTS_TIMER.Enabled = true;
-                        POT1_TIMER.Enabled = true;
-                        POT2_TIMER.Enabled = true;
                     }
                     else SerialPortStatusBulb.Blink(30); //Blink if there is an issue
 
@@ -99,41 +100,68 @@ namespace Embedded_Systems_Project
 
         }
 
-
-
         /// <summary>
-        /// Reads from the serial port
+        /// Reads the serialPort byte values and stores it in global variables 
         /// </summary>
         private void ReadSerial()
         {
-
-            string inputLine = serialPort.ReadExisting();
-
-            
-            if(inputLine != "") label18.Text = (string.Join("\n", System.Text.Encoding.Default.GetBytes(inputLine).Take(5)));
-
-
-
-            byte[] input = Encoding.Default.GetBytes(inputLine);
-
-            try
+            byte[] bytes = ReadSerialPackage();
+            if (bytes != null)
             {
-                if (input.Length > 4 && (input[0] == START_BYTE))
+                if (bytes.Length > 4)
                 {
-                    instructionByte = input[1]; //Instruction byte
-                    firstByte = input[2];  //First data byte
-                    secondByte = input[3]; //Second data byte
+                    instructionByte = bytes[1];
+                    firstByte = bytes[2];
+                    secondByte = bytes[3];
+                }
+                else if (bytes.Length >= 3)
+                {
+                    instructionByte = bytes[1];
                 }
             }
-            catch { }
+        }
 
+        /// <summary>
+        /// Reads the serial port and outputs a byte array containing the data read
+        /// </summary>
+        /// <returns>returns a byte array containing the data from the serial port</returns>
+        private byte[] ReadSerialPackage()
+        {
+            List<byte> packageBytes = new(); //List to store bytes
+            bool packageStartFound = false; //Boolen to store if the first byte is found
+
+            //Consistantly reads the serial port for bytes
+            for (int i = 0; i < 5; i++)
+            {
+                if (serialPort.BytesToRead > 0)
+                {
+                    byte currentByte = (byte)serialPort.ReadByte();
+
+                    if (!packageStartFound && currentByte == START_BYTE)
+                    {
+                        packageStartFound = true;
+                        packageBytes.Add(currentByte);
+                    }
+
+                    else if (packageStartFound)
+                    {
+                        packageBytes.Add(currentByte);
+                        if (currentByte == STOP_BYTE) return packageBytes.ToArray();
+                    }
+                }
+
+                else break; //Break out of the loop if no bytes are found
+            }
+
+
+            return null;
         }
 
         /// <summary>
         /// Sends just and instruction byte to the serial device
         /// </summary>
         /// <param name="instruction"></param>
-        public static void writeSerial(Byte instruction)
+        public static void writeSerial(byte instruction)
         {
 
             byte[] bytes = { START_BYTE, instruction, STOP_BYTE };
@@ -149,7 +177,7 @@ namespace Embedded_Systems_Project
         /// <param name="instruction"></param>
         /// <param name="firstByte"></param>
         /// <param name="secondByte"></param>
-        public static void writeSerial(Byte instruction, byte firstByte, byte secondByte)
+        public static void writeSerial(byte instruction, byte firstByte, byte secondByte)
         {
             byte[] bytes = {START_BYTE , //Send the start byte
                             instruction , //Send the instruction
@@ -157,10 +185,26 @@ namespace Embedded_Systems_Project
                             secondByte , //Send the second byte
                             STOP_BYTE };
 
+            serialPort.Write(bytes, 0, bytes.Length);
+        }
+
+        /// <summary>
+        /// Sends a short with an instruction byte (auto converts short into bytes)
+        /// </summary>
+        /// <param name="instruction"></param>
+        /// <param name="val"></param>
+        public static void writeSerial(byte instruction, ushort val)
+        {
+            byte[] bytes = {START_BYTE , //Send the start byte
+                            instruction , //Send the instruction
+                            (byte)(val & 0xff), //Send the first byte
+                            (byte)((val >> 8) & 0xff) , //Send the second byte
+                            STOP_BYTE };
+
+
             string output = System.Text.Encoding.Default.GetString(bytes);
             serialPort.WriteLine(output);
         }
-
 
         //Disconnect from serial
         private void DisconnectButton_Click(object sender, EventArgs e)
@@ -172,11 +216,6 @@ namespace Embedded_Systems_Project
             ConnectButton.Enabled = true;
 
             RefreshButton.Enabled = false;
-
-            PORTC_LIGHTS_TIMER.Enabled = false;
-            POT1_TIMER.Enabled = false;
-            POT2_TIMER.Enabled = false;
-
         }
 
         private void COM_Port_Dropdown_SelectedIndexChanged(object sender, EventArgs e)
@@ -188,11 +227,6 @@ namespace Embedded_Systems_Project
         private void BaudrateSelection_SelectedIndexChanged(object sender, EventArgs e)
         {
             Baud_Selected = true;
-        }
-
-        private void DigitalPage_Click(object sender, EventArgs e)
-        {
-
         }
 
         //
@@ -269,39 +303,62 @@ namespace Embedded_Systems_Project
         /// </summary>
         private void refreshSevenSeg()
         {
-            string portC_hex = PORTC.ToString("x"); //Convert to hex 
+            string portC_hex = PORTC.ToString("X4"); //Convert to hex 
+            sevenSeg_1.Value = portC_hex[portC_hex.Length-2].ToString();
+            sevenSeg_2.Value = portC_hex[portC_hex.Length - 1].ToString();
 
-            portC_hex = portC_hex.PadLeft(2, '0'); //Add leading zeros
-
-            SevenSegDisplayChars[0] = portC_hex[0];
-            SevenSegDisplayChars[1] = portC_hex[1];
-            sevenSeg_1.Value = SevenSegDisplayChars[0].ToString();
-            sevenSeg_2.Value = SevenSegDisplayChars[1].ToString();
-
-
+            writeSerial(SET_PORTC, (byte)PORTC, (byte)PORTC);
         }
 
         private void RefreshButton_Click(object sender, EventArgs e)
         {
-
-                writeSerial(SET_PORTC, (byte)SevenSegDisplayChars[0], (byte)SevenSegDisplayChars[0]);
-  
-
+            writeSerial(SET_PORTC, (byte)PORTC, (byte)PORTC);
         }
 
         private void Set_PORTA_Lights(char val)
         {
-            int intValue = (int)val;
+            int intValue = val;
             for (int i = 0; i < 8; i++)
             {
-                if (((intValue >> i) & 0x01) == 1)
-                {
-                    PORTA_lights[i].On = true;
-                }
-                else
-                {
-                    PORTA_lights[i].On = false;
-                }
+                PORTA_lights[i].On = ((intValue >> i) & 0x01) == 1; //Shift the value right and grab the last bit
+            }
+        }
+
+        private void EnableGaugeTimers(bool enable)
+        {
+            if (enable)
+            {
+                //Enable the ports 
+                POT1_TIMER.Enabled = true;
+                POT2_TIMER.Enabled = true;
+                LIGHT_TIMER.Enabled = true;
+
+                PORTC_LIGHTS_TIMER.Enabled = false;
+                SevenSegTimer.Enabled = false;
+            }
+           
+            else
+            {
+                POT1_TIMER.Enabled = false;
+                POT2_TIMER.Enabled = false;
+                LIGHT_TIMER.Enabled = false;
+            }
+
+        }
+
+        private void TabController_Selecting(object sender, EventArgs e)
+        {
+            TabPage currentTab = (sender as TabControl).SelectedTab;
+
+            if (currentTab == PortLightsPage)
+            {
+                EnableGaugeTimers(true);
+            }
+            else if (currentTab == DigitalPage)
+            {
+                EnableGaugeTimers(false);
+                PORTC_LIGHTS_TIMER.Enabled = true;
+                SevenSegTimer.Enabled = true;
             }
         }
 
@@ -314,6 +371,7 @@ namespace Embedded_Systems_Project
             {
                 Set_PORTA_Lights((char)secondByte);
             }
+
         }
 
         private void POT1_TIMER_Tick(object sender, EventArgs e)
@@ -324,8 +382,9 @@ namespace Embedded_Systems_Project
             if (instructionByte == READ_POT1)
             {
                 float val = secondByte << 8 | firstByte;
-                PotGauge1.Value = val;
-                PotGauge1.Refresh();
+                PotGauge1.Value = val / (0xFFFF / PotGauge2.MaxValue);
+
+
             }
         }
 
@@ -337,9 +396,30 @@ namespace Embedded_Systems_Project
             if (instructionByte == READ_POT2)
             {
                 float val = secondByte << 8 | firstByte;
-                PotGauge2.Value = val;
-                PotGauge2.Refresh();
+                PotGauge2.Value = val / (0xFFFF / PotGauge2.MaxValue);
             }
+        }
+
+        private void LIGHT_TIMER_Tick(object sender, EventArgs e)
+        {
+            int percentage = 100 - LightScrollBar.Value;
+            LightPercentageLabel.Text = percentage.ToString() + "%";
+
+            //Set the light value here::::
+
+            writeSerial(READ_LIGHT);
+            ReadSerial();
+
+            if (instructionByte == READ_LIGHT)
+            {
+                float val = secondByte << 8 | firstByte;
+                LightGauge.Value = val;
+            }
+        }
+
+        private void SevenSegTimer_Tick(object sender, EventArgs e)
+        {
+            writeSerial(SET_PORTC, (byte)PORTC, (byte)PORTC);
         }
     }
 }

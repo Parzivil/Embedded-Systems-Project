@@ -19,7 +19,7 @@ namespace Bulb
         private bool _on = true;
         private Color _reflectionColor = Color.FromArgb(180, 255, 255, 255);
         private Color[] _surroundColor = new Color[] { Color.FromArgb(0, 255, 255, 255) };
-        private System.Windows.Forms.Timer _timer = new System.Windows.Forms.Timer();
+        private System.Windows.Forms.Timer _timer = new();
 
         /// <summary>
         /// Gets or Sets the color of the LED light
@@ -84,7 +84,7 @@ namespace Bulb
         protected override void OnPaint(PaintEventArgs e)
         {
             // Create an offscreen graphics object for double buffering
-            Bitmap offScreenBmp = new Bitmap(this.ClientRectangle.Width, this.ClientRectangle.Height);
+            Bitmap offScreenBmp = new(this.ClientRectangle.Width, this.ClientRectangle.Height);
             using (System.Drawing.Graphics g = Graphics.FromImage(offScreenBmp))
             {
                 g.SmoothingMode = SmoothingMode.HighQuality;

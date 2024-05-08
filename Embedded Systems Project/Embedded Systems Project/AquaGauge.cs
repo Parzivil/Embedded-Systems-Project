@@ -305,26 +305,26 @@ namespace AquaControls
                 Brush backGroundBrush = new SolidBrush(Color.FromArgb(120, dialColor));
                 if (enableTransparentBackground && this.Parent != null)
                 {
-                    float gg = width / 60;
+                    _ = width / 60;
                     //g.FillEllipse(new SolidBrush(this.Parent.BackColor), -gg, -gg, this.Width+gg*2, this.Height+gg*2);
                 }
                 g.FillEllipse(backGroundBrush, x, y, width, height);
 
                 //Draw Rim
-                SolidBrush outlineBrush = new SolidBrush(Color.FromArgb(100, Color.SlateGray));
-                Pen outline = new Pen(outlineBrush, (float)(width * .03));
+                SolidBrush outlineBrush = new(Color.FromArgb(100, Color.SlateGray));
+                Pen outline = new(outlineBrush, (float)(width * .03));
                 g.DrawEllipse(outline, rectImg);
-                Pen darkRim = new Pen(Color.SlateGray);
+                Pen darkRim = new(Color.SlateGray);
                 g.DrawEllipse(darkRim, x, y, width, height);
 
                 //Draw Callibration
                 DrawCalibration(g, rectImg, ((width) / 2) + x, ((height) / 2) + y);
 
                 //Draw Colored Rim
-                Pen colorPen = new Pen(Color.FromArgb(190, Color.Gainsboro), this.Width / 40);
-                Pen blackPen = new Pen(Color.FromArgb(250, Color.Black), this.Width / 200);
+                Pen colorPen = new(Color.FromArgb(190, Color.Gainsboro), this.Width / 40);
+                _ = new Pen(Color.FromArgb(250, Color.Black), this.Width / 200);
                 int gap = (int)(this.Width * 0.03F);
-                Rectangle rectg = new Rectangle(rectImg.X + gap, rectImg.Y + gap, rectImg.Width - gap * 2, rectImg.Height - gap * 2);
+                Rectangle rectg = new(rectImg.X + gap, rectImg.Y + gap, rectImg.Width - gap * 2, rectImg.Height - gap * 2);
                 g.DrawArc(colorPen, rectg, 135, 270);
 
                 //Draw Threshold
@@ -341,13 +341,13 @@ namespace AquaControls
                 g.DrawArc(colorPen, rectg, stAngle, sweepAngle);
 
                 //Draw Digital Value
-                RectangleF digiRect = new RectangleF((float)this.Width / 2F - (float)this.width / 5F, (float)this.height / 1.2F, (float)this.width / 2.5F, (float)this.Height / 9F);
-                RectangleF digiFRect = new RectangleF(this.Width / 2 - this.width / 7, (int)(this.height / 1.18), this.width / 4, this.Height / 12);
+                RectangleF digiRect = new(Width / 2F - width / 5F, height / 1.2F, width / 2.5F, Height / 9F);
+                RectangleF digiFRect = new(this.Width / 2 - this.width / 7, (int)(this.height / 1.18), this.width / 4, this.Height / 12);
                 g.FillRectangle(new SolidBrush(Color.FromArgb(30, Color.Gray)), digiRect);
                 DisplayNumber(g, this.currentValue, digiFRect);
 
                 SizeF textSize = g.MeasureString(this.dialText, this.Font);
-                RectangleF digiFRectText = new RectangleF(this.Width / 2 - textSize.Width / 2, (int)(this.height / 1.5), textSize.Width, textSize.Height);
+                RectangleF digiFRectText = new(this.Width / 2 - textSize.Width / 2, (int)(this.height / 1.5), textSize.Width, textSize.Height);
                 g.DrawString(dialText, this.Font, new SolidBrush(this.ForeColor), digiFRectText);
                 requiresRedraw = false;
             }
@@ -386,8 +386,6 @@ namespace AquaControls
             val += fromAngle;
 
             float angle = GetRadian(val);
-            float gradientAngle = angle;
-
             PointF[] pts = new PointF[5];
 
             pts[0].X = (float)(cx + radius * Math.Cos(angle));
@@ -422,10 +420,10 @@ namespace AquaControls
             shinePts[2].X = cx;
             shinePts[2].Y = cy;
 
-            LinearGradientBrush gpointer = new LinearGradientBrush(shinePts[0], shinePts[2], Color.SlateGray, Color.Black);
+            LinearGradientBrush gpointer = new(shinePts[0], shinePts[2], Color.SlateGray, Color.Black);
             g.FillPolygon(gpointer, shinePts);
 
-            Rectangle rect = new Rectangle(x, y, width, height);
+            Rectangle rect = new(x, y, width, height);
             DrawCenterPoint(g, rect, ((width) / 2) + x, ((height) / 2) + y);
 
             DrawGloss(g);
@@ -439,13 +437,13 @@ namespace AquaControls
         /// <param name="g"></param>
         private void DrawGloss(Graphics g)
         {
-            RectangleF glossRect = new RectangleF(
+            RectangleF glossRect = new(
                x + (float)(width * 0.10),
                y + (float)(height * 0.07),
                (float)(width * 0.80),
                (float)(height * 0.7));
             LinearGradientBrush gradientBrush =
-                new LinearGradientBrush(glossRect,
+                new(glossRect,
                 Color.FromArgb((int)glossinessAlpha, Color.White),
                 Color.Transparent,
                 LinearGradientMode.Vertical);
@@ -475,8 +473,8 @@ namespace AquaControls
         private void DrawCenterPoint(Graphics g, Rectangle rect, int cX, int cY)
         {
             float shift = Width / 5;
-            RectangleF rectangle = new RectangleF(cX - (shift / 2), cY - (shift / 2), shift, shift);
-            LinearGradientBrush brush = new LinearGradientBrush(rect, Color.Black, Color.FromArgb(100, this.dialColor), LinearGradientMode.Vertical);
+            RectangleF rectangle = new(cX - (shift / 2), cY - (shift / 2), shift, shift);
+            LinearGradientBrush brush = new(rect, Color.Black, Color.FromArgb(100, this.dialColor), LinearGradientMode.Vertical);
             g.FillEllipse(brush, rectangle);
 
             shift = Width / 7;
@@ -499,15 +497,15 @@ namespace AquaControls
             float currentAngle = GetRadian(fromAngle);
             int gap = (int)(this.Width * 0.01F);
             float shift = this.Width / 25;
-            Rectangle rectangle = new Rectangle(rect.Left + gap, rect.Top + gap, rect.Width - gap, rect.Height - gap);
+            Rectangle rectangle = new(rect.Left + gap, rect.Top + gap, rect.Width - gap, rect.Height - gap);
 
             float x, y, x1, y1, tx, ty, radius;
             radius = rectangle.Width / 2 - gap * 5;
             float totalAngle = toAngle - fromAngle;
             float incr = GetRadian(((totalAngle) / ((noOfParts - 1) * (noOfIntermediates + 1))));
 
-            Pen thickPen = new Pen(Color.Black, Width / 50);
-            Pen thinPen = new Pen(Color.Black, Width / 100);
+            Pen thickPen = new(Color.Black, Width / 50);
+            Pen thinPen = new(Color.Black, Width / 100);
             float rulerValue = MinValue;
             for (int i = 0; i <= noOfParts; i++)
             {
@@ -519,13 +517,15 @@ namespace AquaControls
                 g.DrawLine(thickPen, x, y, x1, y1);
 
                 //Draw Strings
-                StringFormat format = new StringFormat();
+                _ = new
+                //Draw Strings
+                StringFormat();
                 tx = (float)(cX + (radius - Width / 10) * Math.Cos(currentAngle));
                 ty = (float)(cY - shift + (radius - Width / 10) * Math.Sin(currentAngle));
                 Brush stringPen = new SolidBrush(this.ForeColor);
-                StringFormat strFormat = new StringFormat(StringFormatFlags.NoClip);
+                StringFormat strFormat = new(StringFormatFlags.NoClip);
                 strFormat.Alignment = StringAlignment.Center;
-                Font f = new Font(this.Font.FontFamily, (float)(this.Width / 23), this.Font.Style);
+                Font f = new(this.Font.FontFamily, this.Width / 23, this.Font.Style);
                 g.DrawString(rulerValue.ToString() + "", f, stringPen, new PointF(tx, ty), strFormat);
                 rulerValue += (float)((MaxValue - MinValue) / (noOfParts - 1));
                 rulerValue = (float)Math.Round(rulerValue, 2);
@@ -567,7 +567,7 @@ namespace AquaControls
             try
             {
                 string num = number.ToString("000.00");
-                num.PadLeft(3, '0');
+                _ = num.PadLeft(3, '0');
                 float shift = 0;
                 if (number < 0)
                 {
@@ -578,10 +578,7 @@ namespace AquaControls
                 for (int i = 0; i < chars.Length; i++)
                 {
                     char c = chars[i];
-                    if (i < chars.Length - 1 && chars[i + 1] == '.')
-                        drawDPS = true;
-                    else
-                        drawDPS = false;
+                    drawDPS = i < chars.Length - 1 && chars[i + 1] == '.';
                     if (c != '.')
                     {
                         if (c == '-')
@@ -618,8 +615,8 @@ namespace AquaControls
             float width;
             width = 10F * height / 13;
 
-            Pen outline = new Pen(Color.FromArgb(40, this.dialColor));
-            Pen fillPen = new Pen(Color.Black);
+            Pen outline = new(Color.FromArgb(40, this.dialColor));
+            Pen fillPen = new(Color.Black);
 
             #region Form Polygon Points
             //Segment A

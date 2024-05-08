@@ -1,6 +1,7 @@
 ﻿using DmitryBrant.CustomControls;
 using Bulb;
 using AquaControls;
+using System.Windows.Forms;
 
 namespace Embedded_Systems_Project
 {
@@ -90,6 +91,11 @@ namespace Embedded_Systems_Project
             PC0_CheckBox = new CheckBox();
             sevenSeg_1 = new SevenSegment();
             PortLightsPage = new TabPage();
+            groupBox1 = new GroupBox();
+            LightPercentageLabel = new Label();
+            LightScrollBar = new VScrollBar();
+            LIGHT_LABEL = new Label();
+            LightGauge = new AquaGauge();
             PotsGroup = new GroupBox();
             label17 = new Label();
             label16 = new Label();
@@ -99,13 +105,15 @@ namespace Embedded_Systems_Project
             PORTC_LIGHTS_TIMER = new System.Windows.Forms.Timer(components);
             POT1_TIMER = new System.Windows.Forms.Timer(components);
             POT2_TIMER = new System.Windows.Forms.Timer(components);
-            label18 = new Label();
+            LIGHT_TIMER = new System.Windows.Forms.Timer(components);
+            SevenSegTimer = new System.Windows.Forms.Timer(components);
             SerialPortBox.SuspendLayout();
             DatabaseGroup.SuspendLayout();
             TabController.SuspendLayout();
             SetupTabPage.SuspendLayout();
             DigitalPage.SuspendLayout();
             PortLightsPage.SuspendLayout();
+            groupBox1.SuspendLayout();
             PotsGroup.SuspendLayout();
             SuspendLayout();
             // 
@@ -354,6 +362,7 @@ namespace Embedded_Systems_Project
             TabController.SelectedIndex = 0;
             TabController.Size = new Size(541, 662);
             TabController.TabIndex = 2;
+            TabController.Selecting += TabController_Selecting;
             // 
             // SetupTabPage
             // 
@@ -707,7 +716,7 @@ namespace Embedded_Systems_Project
             // 
             // PortLightsPage
             // 
-            PortLightsPage.Controls.Add(label18);
+            PortLightsPage.Controls.Add(groupBox1);
             PortLightsPage.Controls.Add(PotsGroup);
             PortLightsPage.Location = new Point(4, 24);
             PortLightsPage.Name = "PortLightsPage";
@@ -716,6 +725,63 @@ namespace Embedded_Systems_Project
             PortLightsPage.TabIndex = 2;
             PortLightsPage.Text = "Ports-Lights";
             PortLightsPage.UseVisualStyleBackColor = true;
+            // 
+            // groupBox1
+            // 
+            groupBox1.Controls.Add(LightPercentageLabel);
+            groupBox1.Controls.Add(LightScrollBar);
+            groupBox1.Controls.Add(LIGHT_LABEL);
+            groupBox1.Controls.Add(LightGauge);
+            groupBox1.Location = new Point(6, 288);
+            groupBox1.Name = "groupBox1";
+            groupBox1.Size = new Size(373, 276);
+            groupBox1.TabIndex = 5;
+            groupBox1.TabStop = false;
+            groupBox1.Text = "Pots";
+            // 
+            // LightPercentageLabel
+            // 
+            LightPercentageLabel.AutoSize = true;
+            LightPercentageLabel.Location = new Point(78, 233);
+            LightPercentageLabel.Name = "LightPercentageLabel";
+            LightPercentageLabel.Size = new Size(44, 15);
+            LightPercentageLabel.TabIndex = 5;
+            LightPercentageLabel.Text = "label18";
+            // 
+            // LightScrollBar
+            // 
+            LightScrollBar.Location = new Point(27, 51);
+            LightScrollBar.Name = "LightScrollBar";
+            LightScrollBar.Size = new Size(39, 201);
+            LightScrollBar.TabIndex = 4;
+            LightScrollBar.Value = 100;
+            // 
+            // LIGHT_LABEL
+            // 
+            LIGHT_LABEL.AutoSize = true;
+            LIGHT_LABEL.Font = new Font("Segoe UI", 14.25F, FontStyle.Bold, GraphicsUnit.Point);
+            LIGHT_LABEL.Location = new Point(208, 51);
+            LIGHT_LABEL.Name = "LIGHT_LABEL";
+            LIGHT_LABEL.Size = new Size(126, 25);
+            LIGHT_LABEL.TabIndex = 3;
+            LIGHT_LABEL.Text = "Light Output";
+            // 
+            // LightGauge
+            // 
+            LightGauge.BackColor = Color.Transparent;
+            LightGauge.DialColor = Color.Lavender;
+            LightGauge.DialText = "Potential Meter 2";
+            LightGauge.Glossiness = 11.363636F;
+            LightGauge.Location = new Point(191, 79);
+            LightGauge.Margin = new Padding(4, 3, 4, 3);
+            LightGauge.MaxValue = 255F;
+            LightGauge.MinValue = 0F;
+            LightGauge.Name = "LightGauge";
+            LightGauge.RecommendedValue = 0F;
+            LightGauge.Size = new Size(175, 173);
+            LightGauge.TabIndex = 1;
+            LightGauge.ThresholdPercent = 0F;
+            LightGauge.Value = 0F;
             // 
             // PotsGroup
             // 
@@ -758,7 +824,7 @@ namespace Embedded_Systems_Project
             PotGauge2.Glossiness = 11.363636F;
             PotGauge2.Location = new Point(191, 97);
             PotGauge2.Margin = new Padding(4, 3, 4, 3);
-            PotGauge2.MaxValue = 65536F;
+            PotGauge2.MaxValue = 5F;
             PotGauge2.MinValue = 0F;
             PotGauge2.Name = "PotGauge2";
             PotGauge2.RecommendedValue = 0F;
@@ -775,7 +841,7 @@ namespace Embedded_Systems_Project
             PotGauge1.Glossiness = 11.363636F;
             PotGauge1.Location = new Point(7, 97);
             PotGauge1.Margin = new Padding(4, 3, 4, 3);
-            PotGauge1.MaxValue = 65536F;
+            PotGauge1.MaxValue = 5F;
             PotGauge1.MinValue = 0F;
             PotGauge1.Name = "PotGauge1";
             PotGauge1.RecommendedValue = 0F;
@@ -796,6 +862,7 @@ namespace Embedded_Systems_Project
             // 
             // PORTC_LIGHTS_TIMER
             // 
+            PORTC_LIGHTS_TIMER.Interval = 10;
             PORTC_LIGHTS_TIMER.Tick += PORTC_LIGHTS_TIMER_Tick;
             // 
             // POT1_TIMER
@@ -805,17 +872,18 @@ namespace Embedded_Systems_Project
             // 
             // POT2_TIMER
             // 
-            POT2_TIMER.Interval = 11;
+            POT2_TIMER.Interval = 10;
             POT2_TIMER.Tick += POT2_TIMER_Tick;
             // 
-            // label18
+            // LIGHT_TIMER
             // 
-            label18.AutoSize = true;
-            label18.Location = new Point(75, 377);
-            label18.Name = "label18";
-            label18.Size = new Size(44, 15);
-            label18.TabIndex = 2;
-            label18.Text = "label18";
+            LIGHT_TIMER.Interval = 10;
+            LIGHT_TIMER.Tick += LIGHT_TIMER_Tick;
+            // 
+            // SevenSegTimer
+            // 
+            SevenSegTimer.Interval = 10;
+            SevenSegTimer.Tick += SevenSegTimer_Tick;
             // 
             // BoardControlForm
             // 
@@ -836,7 +904,8 @@ namespace Embedded_Systems_Project
             DigitalPage.ResumeLayout(false);
             DigitalPage.PerformLayout();
             PortLightsPage.ResumeLayout(false);
-            PortLightsPage.PerformLayout();
+            groupBox1.ResumeLayout(false);
+            groupBox1.PerformLayout();
             PotsGroup.ResumeLayout(false);
             PotsGroup.PerformLayout();
             ResumeLayout(false);
@@ -918,6 +987,12 @@ namespace Embedded_Systems_Project
         private System.Windows.Forms.Timer PORTC_LIGHTS_TIMER;
         private System.Windows.Forms.Timer POT1_TIMER;
         private System.Windows.Forms.Timer POT2_TIMER;
-        public Label label18;
+        private GroupBox groupBox1;
+        private Label LIGHT_LABEL;
+        private AquaGauge LightGauge;
+        private System.Windows.Forms.Timer LIGHT_TIMER;
+        private Label LightPercentageLabel;
+        private VScrollBar LightScrollBar;
+        private System.Windows.Forms.Timer SevenSegTimer;
     }
 }

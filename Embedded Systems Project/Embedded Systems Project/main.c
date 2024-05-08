@@ -30,19 +30,28 @@
 
 #define TX_EMPTY (UCSR1A & (1<<UDRE1))
 
-//ADC commands to change ports
-#define ENABLE_LIGHT_ADC() (ADMUX = 0b01100000) //ADC Channel 0 (Light)
-#define ENABLE_POT2_ADC() (ADMUX = 0b01100001) //ADC Channel 1 (POT_2)
-#define ENABLE_POT1_ADC() (ADMUX = 0b01100010) //ADC Channel 2 (POT_1)
-#define ENABLE_TEMP_ADC() (ADMUX = 0b01100011) //ADC Channel 3 (Temp)
+#define PWM_FREQUENCY 50
 
-#define ENABLE_HEATER() (TCCR1A |= 1<<2)
+#define ADC_CHANNEL_0 0x00
+#define ADC_CHANNEL_1 0x01
+#define ADC_CHANNEL_2 0x02
+#define ADC_CHANNEL_3 0x03
+
+#define ADMUX_DEFAULT 0x60 //ADMUX channel 0 
+
+//ADC commands to change ports
+#define ENABLE_LIGHT_ADC() (ADMUX = (ADMUX & ADMUX_DEFAULT) | ADC_CHANNEL_0) //ADC Channel 0 (Light)
+#define ENABLE_POT2_ADC() (ADMUX = (ADMUX & ADMUX_DEFAULT) | ADC_CHANNEL_1)//ADC Channel 1 (POT_2)
+#define ENABLE_POT1_ADC() (ADMUX = (ADMUX & ADMUX_DEFAULT) | ADC_CHANNEL_2) //ADC Channel 2 (POT_1)
+#define ENABLE_TEMP_ADC() (ADMUX = (ADMUX & ADMUX_DEFAULT) | ADC_CHANNEL_3) //ADC Channel 3 (Temp)
+
+#define ENABLE_HEATER() (TCCR1A |= 1<<2) //Macro function to enable the heater
 #define DISABLE_HEATER() (TCCR1A &= ~1<<2)
 
-#define ENABLE_FAN() (TCCR1A |= 1<<6)
+#define ENABLE_FAN() (TCCR1A |= 1<<6) //Macro function to enable the fan
 #define DISABLE_FAN() (TCCR1A &= ~1<<6)
 
-#define ENABLE_LIGHT() (TCCR1A |= 1<<4)
+#define ENABLE_LIGHT() (TCCR1A |= 1<<4) //Macro function to enable the light
 #define DISABLE_LIGHT() (TCCR1A &= ~1<<4)
 
 //States for receiving data via UART
@@ -52,7 +61,6 @@
 #define SecondDataByte 3
 #define StopByte 4
 
-#define PROTOCOL_LEN 5
 
 unsigned char conversionComplete = 0;
 unsigned short conversion;
@@ -64,11 +72,9 @@ unsigned char LSB, MSB; //Chars to store the received data
 
 unsigned char state; //Current receiving state
 
-unsigned char txState = 0; //Set the state equals ready
-
 unsigned char INS = 0x00; //Char to store instruction received
 
-char* p_data; //Create pointer for data register
+volatile unsigned char* p_data; //Create pointer for data register
 
 
 //Setup the MCU and its registers
@@ -78,20 +84,26 @@ void Setup(){
 	cli(); //Clear interrupts
 	sei(); //Enable interrupts
 	
-	UCSR1B = 0b10011000; //Configure USART
-	UCSR1C = 0b00000110;
-	UBRR1L = 12; //Set Baud rate to 38400
+	//Configure USART
+	UCSR1B |= (1<<4); //Enable USART Receiver
+	UCSR1B |= (1<<3); //Enable USART Transmitter
+	UCSR1B |= (1<<7); //Enable USART Receiver interrupt
+
+	UCSR1C |= (1<<2) | (1<<1); //Set USART to 8 Bits per character
+	
+	UBRR1L = 12; //Set USART Baud rate to 38400
 	
 	DDRA = 0x00; //Set PORTA as input
 	DDRC = 0xFF; //Set PORTC as output
 	DDRB = 0b11100000;
 	
 	//Setup OCR 
-	TCCR1A = 0b01010100; //Enable OCR1-ABC
-	TCCR1B = 0b00000001; //No pre-scaler default PWM mode
+	TCCR1A = 0b10100010; //Enable OCR1-ABC
+	TCCR1B = 0b00011001; //8x pre-scaler default PWM mode
+	ICR1 = PWM_FREQUENCY; //Set ICR to 20khz (50us)
 	
 	//Setup the ADC 
-	ADMUX = 0b01100000;
+	ADMUX = 0b11100000;
 	ADCSRA = 0b11101000;
 	
 	//Use switches	
@@ -123,11 +135,8 @@ void Transmit_Short(unsigned char instruction, unsigned short data){
 	sendTo_tx(START); //Send the start byte
 	sendTo_tx(instruction); //Send the instruction byte
 
-
 	unsigned char lsb = data; // to copy the first 8 bits.
 	unsigned char msb = data >> 8; //Get the lat 8 bits
-	
-	
 	
 	sendTo_tx(msb); //Send the first data byte
 	sendTo_tx(lsb); //Send the second data byte
@@ -155,32 +164,34 @@ void Set(unsigned char INS){
 			if(LSB == 0 && MSB == 0) DISABLE_HEATER();
 			else{
 				ENABLE_HEATER();
-				OCR1CL = LSB; //Set the least sig. byte
-				OCR1CH = MSB; //Set most sig. byte
+				OCR1C = LSB << 8 | MSB;
 			}
-			Transmit_Byte(SET_HEATER); //Send back instruction to confirm
+			Transmit_Short(SET_HEATER, OCR1C); //Send back instruction to confirm
 		break;
 		
 		//Set Light PWM to inputed data
 		case SET_LIGHT:
 			if(LSB == 0 && MSB == 0) DISABLE_LIGHT();
 			else{
-				ENABLE_LIGHT();
-				OCR1BL = LSB; //Set the least sig. byte
-				OCR1BH = MSB; //Set most sig. byte
+				ENABLE_LIGHT();				
+				OCR1B = LSB << 8 | MSB;
 			}
-			Transmit_Byte(SET_LIGHT); //Send back instruction to confirm
+			Transmit_Short(SET_LIGHT, OCR1B); //Send back instruction to confirm
 		break;
 		
 		//Set Motor PWM to inputed data
 		case SET_MOTOR:
-			if(LSB == 0 && MSB == 0) DISABLE_FAN();
-			else{
-				ENABLE_FAN();
-				OCR1AL = LSB; //Set the least sig. byte
-				OCR1AH = MSB; //Set most sig. byte
+			if(LSB == 0 && MSB == 0) {
+				DISABLE_FAN();
+				OCR1A = 0;
 			}
-			Transmit_Byte(SET_MOTOR); //Send back instruction to confirm
+			else{
+		
+				ENABLE_FAN();
+				OCR1A = LSB << 8 | MSB;
+
+			}
+			Transmit_Short(SET_MOTOR, OCR1A); //Send back instruction to confirm
 		break;
 	}
 }
@@ -218,6 +229,8 @@ unsigned short Read(unsigned char INS){
 		if(conversionComplete == 1) return conversion; //Check if the conversion is complete and return the conversion
 		else return 0;//If conversion is not complete return 0
 	}
+
+	else return 0xFFFF; //Return max number if no case is met as an error
 }
 
 
@@ -290,6 +303,6 @@ ISR(USART1_RX_vect){
 
 //When ADC conversion complete 
 ISR(ADC_vect){
-	conversion = ADCL * 0x100u + ADCH; //Cast the two registers as a short 
+	conversion = ADCL*0x100u+ADCH; //Cast the two registers as a short 
 	conversionComplete = 1; //Register the conversion as complete
 }

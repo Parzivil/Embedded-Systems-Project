@@ -99,7 +99,8 @@ void Setup(){
 	
 	//Setup OCR 
 	TCCR1A = 0b10100010; //Enable OCR1-ABC
-	TCCR1B = 0b00011001; //8x pre-scaler default PWM mode
+	TCCR1B = 0b00011010; //8x pre-scaler default PWM mode
+
 	ICR1 = PWM_FREQUENCY; //Set ICR to 20khz (50us)
 	
 	//Setup the ADC 
@@ -150,7 +151,6 @@ void Transmit_Byte(unsigned char data){
 	sendTo_tx(STOP); //Send the stop byte
 }
 
-
 void Set(unsigned char INS){
 	switch(INS){
 		case SET_PORTC:
@@ -173,7 +173,7 @@ void Set(unsigned char INS){
 		case SET_LIGHT:
 			if(LSB == 0 && MSB == 0) DISABLE_LIGHT();
 			else{
-				ENABLE_LIGHT();				
+				ENABLE_LIGHT();	
 				OCR1B = LSB << 8 | MSB;
 			}
 			Transmit_Short(SET_LIGHT, OCR1B); //Send back instruction to confirm

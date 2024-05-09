@@ -33,7 +33,7 @@ namespace Embedded_Systems_Project
         private bool Baud_Selected = false;
         private bool SerialConnected = false;
 
-        private ushort PORTC = 0x0000;
+        private int PORTC = 0x00;
         private char[] SevenSegDisplayChars = new char[2];
 
         private LedBulb[] PORTA_lights;
@@ -168,6 +168,7 @@ namespace Embedded_Systems_Project
             string output = System.Text.Encoding.Default.GetString(bytes);
 
             serialPort.Write(output);
+            serialPort.Write(output);
 
         }
 
@@ -216,6 +217,9 @@ namespace Embedded_Systems_Project
             ConnectButton.Enabled = true;
 
             RefreshButton.Enabled = false;
+
+            EnableGaugeTimers(false);
+            LIGHT_TIMER.Enabled = false;
         }
 
         private void COM_Port_Dropdown_SelectedIndexChanged(object sender, EventArgs e)
@@ -234,8 +238,8 @@ namespace Embedded_Systems_Project
         //
         private void PC7_CheckBox_CheckedChanged(object sender, EventArgs e)
         {
-            if (PC0_CheckBox.Checked) PORTC |= 1 << 7;
-            else PORTC &= 0 << 7;
+            if (PC7_CheckBox.Checked) PORTC |= 1 << 7;
+            else PORTC &= ~(1 << 7);
 
             refreshSevenSeg();
 
@@ -243,48 +247,48 @@ namespace Embedded_Systems_Project
 
         private void PC6_CheckBox_CheckedChanged(object sender, EventArgs e)
         {
-            if (PC0_CheckBox.Checked) PORTC |= 1 << 6;
-            else PORTC &= 0 << 6;
+            if (PC6_CheckBox.Checked) PORTC |= 1 << 6;
+            else PORTC &= ~(1 << 6);
 
             refreshSevenSeg();
         }
 
         private void PC5_CheckBox_CheckedChanged(object sender, EventArgs e)
         {
-            if (PC0_CheckBox.Checked) PORTC |= 1 << 5;
-            else PORTC &= 0 << 5;
+            if (PC5_CheckBox.Checked) PORTC |= 1 << 5;
+            else PORTC &= ~(1 << 5);
 
             refreshSevenSeg();
         }
 
         private void PC4_CheckBox_CheckedChanged(object sender, EventArgs e)
         {
-            if (PC0_CheckBox.Checked) PORTC |= 1 << 4;
-            else PORTC &= 0 << 4;
+            if (PC4_CheckBox.Checked) PORTC |= 1 << 4;
+            else PORTC &= ~(1 << 4);
 
             refreshSevenSeg();
         }
 
         private void PC3_CheckBox_CheckedChanged(object sender, EventArgs e)
         {
-            if (PC0_CheckBox.Checked) PORTC |= 1 << 3;
-            else PORTC &= 0 << 3;
+            if (PC3_CheckBox.Checked) PORTC |= 1 << 3;
+            else PORTC &= ~(1 << 3);
 
             refreshSevenSeg();
         }
 
         private void PC2_CheckBox_CheckedChanged(object sender, EventArgs e)
         {
-            if (PC0_CheckBox.Checked) PORTC |= 1 << 2;
-            else PORTC &= 0 << 2;
+            if (PC2_CheckBox.Checked) PORTC |= 1 << 2;
+            else PORTC &= ~(1 << 2);
 
             refreshSevenSeg();
         }
 
         private void PC1_CheckBox_CheckedChanged(object sender, EventArgs e)
         {
-            if (PC0_CheckBox.Checked) PORTC |= 1 << 1;
-            else PORTC &= 0 << 1;
+            if (PC1_CheckBox.Checked) PORTC |= 1 << 1;
+            else PORTC &= ~(1 << 1);
 
             refreshSevenSeg();
         }
@@ -292,7 +296,7 @@ namespace Embedded_Systems_Project
         private void PC0_CheckBox_CheckedChanged(object sender, EventArgs e)
         {
             if (PC0_CheckBox.Checked) PORTC |= 1 << 0;
-            else PORTC &= 0 << 0;
+            else PORTC &= ~(1 << 0);
             refreshSevenSeg();
 
         }
@@ -304,26 +308,43 @@ namespace Embedded_Systems_Project
         private void refreshSevenSeg()
         {
             string portC_hex = PORTC.ToString("X4"); //Convert to hex 
-            sevenSeg_1.Value = portC_hex[portC_hex.Length-2].ToString();
-            sevenSeg_2.Value = portC_hex[portC_hex.Length - 1].ToString();
+            sevenSeg_1.Value = portC_hex[portC_hex.Length - 2].ToString(); //Set the first character
+            sevenSeg_2.Value = portC_hex[portC_hex.Length - 1].ToString(); //Set the second character
 
-            writeSerial(SET_PORTC, (byte)PORTC, (byte)PORTC);
+            writeSerial(SET_PORTC, (byte)PORTC, (byte)PORTC); //Write the values to the serial PORT
         }
 
         private void RefreshButton_Click(object sender, EventArgs e)
         {
-            writeSerial(SET_PORTC, (byte)PORTC, (byte)PORTC);
+            //Set all the check boxes to false
+            PC0_CheckBox.Checked = false;
+            PC1_CheckBox.Checked = false;
+            PC2_CheckBox.Checked = false;
+            PC3_CheckBox.Checked = false;
+            PC4_CheckBox.Checked = false;
+            PC5_CheckBox.Checked = false;
+            PC6_CheckBox.Checked = false;
+            PC7_CheckBox.Checked = false;
+
+            PORTC = 0x00; //Clear PORTC values 
+
+            refreshSevenSeg(); //Refresh the seven Segment display
         }
 
         private void Set_PORTA_Lights(char val)
         {
-            int intValue = val;
+            int intValue = val; //Convert the char into an int
+            //Loop through each light
             for (int i = 0; i < 8; i++)
             {
                 PORTA_lights[i].On = ((intValue >> i) & 0x01) == 1; //Shift the value right and grab the last bit
             }
         }
 
+        /// <summary>
+        /// Enables the gauge timers 
+        /// </summary>
+        /// <param name="enable">Boolean whether the timers are enabled or not (true is enabled, false is not enabled)</param>
         private void EnableGaugeTimers(bool enable)
         {
             if (enable)
@@ -334,9 +355,8 @@ namespace Embedded_Systems_Project
                 LIGHT_TIMER.Enabled = true;
 
                 PORTC_LIGHTS_TIMER.Enabled = false;
-                SevenSegTimer.Enabled = false;
             }
-           
+
             else
             {
                 POT1_TIMER.Enabled = false;
@@ -345,6 +365,8 @@ namespace Embedded_Systems_Project
             }
 
         }
+
+
 
         private void TabController_Selecting(object sender, EventArgs e)
         {
@@ -358,7 +380,6 @@ namespace Embedded_Systems_Project
             {
                 EnableGaugeTimers(false);
                 PORTC_LIGHTS_TIMER.Enabled = true;
-                SevenSegTimer.Enabled = true;
             }
         }
 
@@ -402,24 +423,22 @@ namespace Embedded_Systems_Project
 
         private void LIGHT_TIMER_Tick(object sender, EventArgs e)
         {
-            int percentage = 100 - LightScrollBar.Value;
-            LightPercentageLabel.Text = percentage.ToString() + "%";
-
-            //Set the light value here::::
-
             writeSerial(READ_LIGHT);
             ReadSerial();
 
             if (instructionByte == READ_LIGHT)
             {
-                float val = secondByte << 8 | firstByte;
+                float val = (secondByte << 8 | firstByte) / 0xFF;
                 LightGauge.Value = val;
             }
         }
 
-        private void SevenSegTimer_Tick(object sender, EventArgs e)
+        private void LightScrollBar_Scroll(object sender, ScrollEventArgs e)
         {
-            writeSerial(SET_PORTC, (byte)PORTC, (byte)PORTC);
+            int percentage = 100 - LightScrollBar.Value;
+            LightPercentageLabel.Text = percentage.ToString() + "%";
+            writeSerial(SET_LIGHT, (ushort)(percentage * 100 / 0xFFFF));
+            ReadSerial(); //Clear the read buffer of the confirmation code
         }
     }
 }

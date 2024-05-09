@@ -106,7 +106,6 @@ namespace Embedded_Systems_Project
             POT1_TIMER = new System.Windows.Forms.Timer(components);
             POT2_TIMER = new System.Windows.Forms.Timer(components);
             LIGHT_TIMER = new System.Windows.Forms.Timer(components);
-            SevenSegTimer = new System.Windows.Forms.Timer(components);
             SerialPortBox.SuspendLayout();
             DatabaseGroup.SuspendLayout();
             TabController.SuspendLayout();
@@ -744,17 +743,19 @@ namespace Embedded_Systems_Project
             LightPercentageLabel.AutoSize = true;
             LightPercentageLabel.Location = new Point(78, 233);
             LightPercentageLabel.Name = "LightPercentageLabel";
-            LightPercentageLabel.Size = new Size(44, 15);
+            LightPercentageLabel.Size = new Size(23, 15);
             LightPercentageLabel.TabIndex = 5;
-            LightPercentageLabel.Text = "label18";
+            LightPercentageLabel.Text = "0%";
             // 
             // LightScrollBar
             // 
             LightScrollBar.Location = new Point(27, 51);
+            LightScrollBar.Maximum = 110;
             LightScrollBar.Name = "LightScrollBar";
             LightScrollBar.Size = new Size(39, 201);
             LightScrollBar.TabIndex = 4;
             LightScrollBar.Value = 100;
+            LightScrollBar.Scroll += LightScrollBar_Scroll;
             // 
             // LIGHT_LABEL
             // 
@@ -770,7 +771,7 @@ namespace Embedded_Systems_Project
             // 
             LightGauge.BackColor = Color.Transparent;
             LightGauge.DialColor = Color.Lavender;
-            LightGauge.DialText = "Potential Meter 2";
+            LightGauge.DialText = "Light Meter";
             LightGauge.Glossiness = 11.363636F;
             LightGauge.Location = new Point(191, 79);
             LightGauge.Margin = new Padding(4, 3, 4, 3);
@@ -867,23 +868,18 @@ namespace Embedded_Systems_Project
             // 
             // POT1_TIMER
             // 
-            POT1_TIMER.Interval = 10;
+            POT1_TIMER.Interval = 50;
             POT1_TIMER.Tick += POT1_TIMER_Tick;
             // 
             // POT2_TIMER
             // 
-            POT2_TIMER.Interval = 10;
+            POT2_TIMER.Interval = 50;
             POT2_TIMER.Tick += POT2_TIMER_Tick;
             // 
             // LIGHT_TIMER
             // 
-            LIGHT_TIMER.Interval = 10;
+            LIGHT_TIMER.Interval = 50;
             LIGHT_TIMER.Tick += LIGHT_TIMER_Tick;
-            // 
-            // SevenSegTimer
-            // 
-            SevenSegTimer.Interval = 10;
-            SevenSegTimer.Tick += SevenSegTimer_Tick;
             // 
             // BoardControlForm
             // 
@@ -993,6 +989,5 @@ namespace Embedded_Systems_Project
         private System.Windows.Forms.Timer LIGHT_TIMER;
         private Label LightPercentageLabel;
         private VScrollBar LightScrollBar;
-        private System.Windows.Forms.Timer SevenSegTimer;
     }
 }

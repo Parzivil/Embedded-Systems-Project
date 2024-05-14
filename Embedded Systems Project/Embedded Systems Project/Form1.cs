@@ -1,28 +1,46 @@
 using Bulb;
+using Microsoft.Identity.Client;
+using MySql.Data.MySqlClient;
+using ScottPlot.AxisPanels;
 using System.IO.Ports;
+using System.Reflection;
 
 namespace Embedded_Systems_Project
 {
     public partial class BoardControlForm : Form
     {
+        private const string serverName = "127.0.0.1";
+        private const string userName = "ST123456";
+        private const string databaseName = "temperature_record";
+        private const string passwordName = "ZJx(]8djn-3@.Q/u";
+        private const string tableName = "temperature";
+
+        /// <summary>
+        /// Database Connection
+        /// </summary>
+        MySqlConnection mySqlConnection;
+
+        MySqlDataReader mySqlDataReader;
 
         //Read instruction bytes
-        public const byte TXCHECK = 0x00;
-        public const byte READ_PINA = 0x01;
-        public const byte READ_POT1 = 0x02;
-        public const byte READ_POT2 = 0x03;
-        public const byte READ_TEMP = 0x04;
-        public const byte READ_LIGHT = 0x05;
+        private const byte TXCHECK = 0x00;
+        private const byte READ_PINA = 0x01;
+        private const byte READ_POT1 = 0x02;
+        private const byte READ_POT2 = 0x03;
+        private const byte READ_TEMP = 0x04;
+        private const byte READ_LIGHT = 0x05;
 
         //Write instruction bytes
-        public const byte SET_PORTC = 0x0A;
-        public const byte SET_HEATER = 0x0B;
-        public const byte SET_LIGHT = 0x0C;
-        public const byte SET_MOTOR = 0x0D;
+        private const byte SET_PORTC = 0x0A;
+        private const byte SET_HEATER = 0x0B;
+        private const byte SET_LIGHT = 0x0C;
+        private const byte SET_MOTOR = 0x0D;
 
         //Start and stop instruction bytes
-        public const byte START_BYTE = 0x53;
-        public const byte STOP_BYTE = 0xAA;
+        private const byte START_BYTE = 0x53;
+        private const byte STOP_BYTE = 0xAA;
+
+        private const float TEMP_CONST = 26;
 
         //byte variables to store the incoming bytes
         private static byte instructionByte, firstByte, secondByte;
@@ -38,6 +56,9 @@ namespace Embedded_Systems_Project
 
         private LedBulb[] PORTA_lights;
 
+        //https://scottplot.net/cookbook/5.0/
+
+
         /// <summary>
         /// Constructor for BoardControlForm Class
         /// </summary>
@@ -45,10 +66,17 @@ namespace Embedded_Systems_Project
         {
             InitializeComponent();
 
+            ServerNameSelection.Items.Add(serverName);
+            ServerNameSelection.Text = serverName;
+            UsernameTextBox.Text = userName;
+            PasswordTextBox.Text = passwordName;
+            DatabaseTextBox.Text = databaseName;
+
+            TempPlot.Interaction.Disable(); //Prevent interaction with the plot chart
+
             PORTA_lights = new LedBulb[8] { PA0, PA1, PA2, PA3, PA4, PA5, PA6, PA7 };
 
             string[] portNames = SerialPort.GetPortNames(); //Grab available ports
-
 
             int[] baudrates = { 4800, 9600, 19200, 38400, 57600, 115200, 230400, 460800, 921600 };
 
@@ -56,6 +84,7 @@ namespace Embedded_Systems_Project
 
             foreach (int baudrate in baudrates) _ = BaudrateSelection.Items.Add(baudrate); //Add Baud rates to list
 
+            BaudrateSelection.Text = baudrates[3].ToString();
         }
 
         /// <summary>
@@ -89,6 +118,7 @@ namespace Embedded_Systems_Project
                     }
                     else SerialPortStatusBulb.Blink(30); //Blink if there is an issue
 
+
                 }
                 catch (Exception ex)
                 {
@@ -98,6 +128,41 @@ namespace Embedded_Systems_Project
 
             }
 
+        }
+
+        private void DatabaseConnectButton_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                string connectionString = "server=" + ServerNameSelection.SelectedItem + ";" +
+                                            "user=" + UsernameTextBox.Text + ";" +
+                                            "database=" + DatabaseTextBox.Text + ";" +
+                                            "password=" + PasswordTextBox.Text + ";";
+                mySqlConnection = new MySqlConnection(connectionString);
+                mySqlConnection.Open();
+
+                if (mySqlConnection.State == System.Data.ConnectionState.Open) ServerConnectionLED.On = true;
+                else ServerConnectionLED.Blink(30);
+
+                mySqlConnection.Close();
+                if (serialPort.IsOpen) DATABASE_TIMER.Enabled = true;
+
+
+            }
+            catch (Exception ex)
+            {
+                ServerConnectionLED.On = false;
+                DATABASE_TIMER.Enabled = false;
+                MessageBox.Show(ex.Message);
+            }
+        }
+
+
+        private void DatabaseDisconnectButton_Click(object sender, EventArgs e)
+        {
+            mySqlConnection.Close();
+            DATABASE_TIMER.Enabled = false;
+            ServerConnectionLED.On = false;
         }
 
         /// <summary>
@@ -439,6 +504,37 @@ namespace Embedded_Systems_Project
             LightPercentageLabel.Text = percentage.ToString() + "%";
             writeSerial(SET_LIGHT, (ushort)(percentage * 100 / 0xFFFF));
             ReadSerial(); //Clear the read buffer of the confirmation code
+        }
+
+        private void SendToDatabase(float data)
+        {
+
+            mySqlConnection.Open();
+            string Query = "insert into " + databaseName + "." + tableName + "(timeStamp,temperature,remark) values('"
+                + DateTime.Now + "','" + data + "','" + userName + "');";
+            MySqlCommand Command = new MySqlCommand(Query, mySqlConnection);
+
+
+            mySqlDataReader = Command.ExecuteReader(); //Exicute the command
+            mySqlConnection.Close();
+
+        }
+
+        private void DATABASE_TIMER_Tick(object sender, EventArgs e)
+        {
+            writeSerial(READ_TEMP);
+            ReadSerial();
+            if (instructionByte == READ_TEMP)
+            {
+                char temp = (char)((firstByte << 8) + secondByte);
+
+                double tempF = ((float)temp * TEMP_CONST) / 0xFFFF;
+                SendToDatabase((float)Math.Round(tempF, 2));
+
+                logger1.Add(Walker1.Next((int)tempF));
+                logger1.Add(Walker1.Next(DATABASE_TIMER.Interval));
+            }
+
         }
     }
 }

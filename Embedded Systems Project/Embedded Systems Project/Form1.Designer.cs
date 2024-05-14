@@ -2,6 +2,9 @@
 using Bulb;
 using AquaControls;
 using System.Windows.Forms;
+using System.Windows.Forms.DataVisualization.Charting;
+
+using System.Linq.Expressions;
 
 namespace Embedded_Systems_Project
 {
@@ -47,7 +50,7 @@ namespace Embedded_Systems_Project
             COM_Port_Dropdown = new ComboBox();
             DatabaseGroup = new GroupBox();
             label7 = new Label();
-            ledBulb1 = new LedBulb();
+            ServerConnectionLED = new LedBulb();
             DatabaseDisconnectButton = new Button();
             DatabaseTextBox = new TextBox();
             DatabaseConnectButton = new Button();
@@ -102,10 +105,19 @@ namespace Embedded_Systems_Project
             PotGauge2 = new AquaGauge();
             PotGauge1 = new AquaGauge();
             TempPage = new TabPage();
+            label21 = new Label();
+            label20 = new Label();
+            label19 = new Label();
+            label18 = new Label();
+            numericUpDown3 = new NumericUpDown();
+            numericUpDown2 = new NumericUpDown();
+            numericUpDown1 = new NumericUpDown();
             PORTC_LIGHTS_TIMER = new System.Windows.Forms.Timer(components);
             POT1_TIMER = new System.Windows.Forms.Timer(components);
             POT2_TIMER = new System.Windows.Forms.Timer(components);
             LIGHT_TIMER = new System.Windows.Forms.Timer(components);
+            DATABASE_TIMER = new System.Windows.Forms.Timer(components);
+            TempPlot = new ScottPlot.WinForms.FormsPlot();
             SerialPortBox.SuspendLayout();
             DatabaseGroup.SuspendLayout();
             TabController.SuspendLayout();
@@ -114,6 +126,10 @@ namespace Embedded_Systems_Project
             PortLightsPage.SuspendLayout();
             groupBox1.SuspendLayout();
             PotsGroup.SuspendLayout();
+            TempPage.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)numericUpDown3).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)numericUpDown2).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)numericUpDown1).BeginInit();
             SuspendLayout();
             // 
             // SerialPortStatusBulb
@@ -226,7 +242,7 @@ namespace Embedded_Systems_Project
             // DatabaseGroup
             // 
             DatabaseGroup.Controls.Add(label7);
-            DatabaseGroup.Controls.Add(ledBulb1);
+            DatabaseGroup.Controls.Add(ServerConnectionLED);
             DatabaseGroup.Controls.Add(DatabaseDisconnectButton);
             DatabaseGroup.Controls.Add(DatabaseTextBox);
             DatabaseGroup.Controls.Add(DatabaseConnectButton);
@@ -254,13 +270,13 @@ namespace Embedded_Systems_Project
             label7.TabIndex = 8;
             label7.Text = "Database Port Status";
             // 
-            // ledBulb1
+            // ServerConnectionLED
             // 
-            ledBulb1.Location = new Point(240, 292);
-            ledBulb1.Name = "ledBulb1";
-            ledBulb1.On = true;
-            ledBulb1.Size = new Size(20, 20);
-            ledBulb1.TabIndex = 7;
+            ServerConnectionLED.Location = new Point(187, 287);
+            ServerConnectionLED.Name = "ServerConnectionLED";
+            ServerConnectionLED.On = false;
+            ServerConnectionLED.Size = new Size(20, 20);
+            ServerConnectionLED.TabIndex = 7;
             // 
             // DatabaseDisconnectButton
             // 
@@ -270,6 +286,7 @@ namespace Embedded_Systems_Project
             DatabaseDisconnectButton.TabIndex = 8;
             DatabaseDisconnectButton.Text = "Database-Disconnect";
             DatabaseDisconnectButton.UseVisualStyleBackColor = true;
+            DatabaseDisconnectButton.Click += DatabaseDisconnectButton_Click;
             // 
             // DatabaseTextBox
             // 
@@ -286,6 +303,7 @@ namespace Embedded_Systems_Project
             DatabaseConnectButton.TabIndex = 7;
             DatabaseConnectButton.Text = "Database-Connect";
             DatabaseConnectButton.UseVisualStyleBackColor = true;
+            DatabaseConnectButton.Click += DatabaseConnectButton_Click;
             // 
             // PasswordTextBox
             // 
@@ -853,6 +871,14 @@ namespace Embedded_Systems_Project
             // 
             // TempPage
             // 
+            TempPage.Controls.Add(TempPlot);
+            TempPage.Controls.Add(label21);
+            TempPage.Controls.Add(label20);
+            TempPage.Controls.Add(label19);
+            TempPage.Controls.Add(label18);
+            TempPage.Controls.Add(numericUpDown3);
+            TempPage.Controls.Add(numericUpDown2);
+            TempPage.Controls.Add(numericUpDown1);
             TempPage.Location = new Point(4, 24);
             TempPage.Name = "TempPage";
             TempPage.Padding = new Padding(3);
@@ -860,6 +886,66 @@ namespace Embedded_Systems_Project
             TempPage.TabIndex = 3;
             TempPage.Text = "Temp Control";
             TempPage.UseVisualStyleBackColor = true;
+            // 
+            // label21
+            // 
+            label21.AutoSize = true;
+            label21.Location = new Point(47, 92);
+            label21.Name = "label21";
+            label21.Size = new Size(57, 15);
+            label21.TabIndex = 6;
+            label21.Text = "PI Tuning";
+            // 
+            // label20
+            // 
+            label20.AutoSize = true;
+            label20.Location = new Point(33, 23);
+            label20.Name = "label20";
+            label20.Size = new Size(102, 15);
+            label20.TabIndex = 5;
+            label20.Text = "Setpoint Temp [C]";
+            // 
+            // label19
+            // 
+            label19.AutoSize = true;
+            label19.Location = new Point(20, 141);
+            label19.Name = "label19";
+            label19.Size = new Size(17, 15);
+            label19.TabIndex = 4;
+            label19.Text = "Ki";
+            // 
+            // label18
+            // 
+            label18.AutoSize = true;
+            label18.Location = new Point(20, 112);
+            label18.Name = "label18";
+            label18.Size = new Size(21, 15);
+            label18.TabIndex = 3;
+            label18.Text = "Kp";
+            // 
+            // numericUpDown3
+            // 
+            numericUpDown3.Location = new Point(47, 139);
+            numericUpDown3.Name = "numericUpDown3";
+            numericUpDown3.Size = new Size(71, 23);
+            numericUpDown3.TabIndex = 2;
+            numericUpDown3.TextAlign = HorizontalAlignment.Center;
+            // 
+            // numericUpDown2
+            // 
+            numericUpDown2.Location = new Point(47, 110);
+            numericUpDown2.Name = "numericUpDown2";
+            numericUpDown2.Size = new Size(71, 23);
+            numericUpDown2.TabIndex = 1;
+            numericUpDown2.TextAlign = HorizontalAlignment.Center;
+            // 
+            // numericUpDown1
+            // 
+            numericUpDown1.Location = new Point(47, 41);
+            numericUpDown1.Name = "numericUpDown1";
+            numericUpDown1.Size = new Size(71, 23);
+            numericUpDown1.TabIndex = 0;
+            numericUpDown1.TextAlign = HorizontalAlignment.Center;
             // 
             // PORTC_LIGHTS_TIMER
             // 
@@ -880,6 +966,19 @@ namespace Embedded_Systems_Project
             // 
             LIGHT_TIMER.Interval = 50;
             LIGHT_TIMER.Tick += LIGHT_TIMER_Tick;
+            // 
+            // DATABASE_TIMER
+            // 
+            DATABASE_TIMER.Interval = 10;
+            DATABASE_TIMER.Tick += DATABASE_TIMER_Tick;
+            // 
+            // TempPlot
+            // 
+            TempPlot.DisplayScale = 1F;
+            TempPlot.Location = new Point(195, 23);
+            TempPlot.Name = "TempPlot";
+            TempPlot.Size = new Size(317, 251);
+            TempPlot.TabIndex = 7;
             // 
             // BoardControlForm
             // 
@@ -904,6 +1003,11 @@ namespace Embedded_Systems_Project
             groupBox1.PerformLayout();
             PotsGroup.ResumeLayout(false);
             PotsGroup.PerformLayout();
+            TempPage.ResumeLayout(false);
+            TempPage.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)numericUpDown3).EndInit();
+            ((System.ComponentModel.ISupportInitialize)numericUpDown2).EndInit();
+            ((System.ComponentModel.ISupportInitialize)numericUpDown1).EndInit();
             ResumeLayout(false);
         }
 
@@ -945,7 +1049,7 @@ namespace Embedded_Systems_Project
         private CheckBox PC1_CheckBox;
         private CheckBox PC0_CheckBox;
         private LedBulb SerialPortStatusBulb;
-        private LedBulb ledBulb1;
+        private LedBulb ServerConnectionLED;
         private Label SerialConnectionErrorLabel;
         private Label label7;
         private LedBulb ledBulb4;
@@ -989,5 +1093,14 @@ namespace Embedded_Systems_Project
         private System.Windows.Forms.Timer LIGHT_TIMER;
         private Label LightPercentageLabel;
         private VScrollBar LightScrollBar;
+        private Label label21;
+        private Label label20;
+        private Label label19;
+        private Label label18;
+        private NumericUpDown numericUpDown3;
+        private NumericUpDown numericUpDown2;
+        private NumericUpDown numericUpDown1;
+        private System.Windows.Forms.Timer DATABASE_TIMER;
+        private ScottPlot.WinForms.FormsPlot TempPlot;
     }
 }

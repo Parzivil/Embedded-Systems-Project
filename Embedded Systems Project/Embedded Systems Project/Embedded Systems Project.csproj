@@ -19,7 +19,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="HIC.System.Windows.Forms.DataVisualization" Version="1.0.1" />
     <PackageReference Include="MySql.Data" Version="8.4.0" />
     <PackageReference Include="NuGet.Frameworks" Version="6.9.1" />
     <PackageReference Include="ScottPlot" Version="5.0.34" />

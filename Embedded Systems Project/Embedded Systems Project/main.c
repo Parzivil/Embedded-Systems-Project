@@ -45,15 +45,6 @@
 #define ENABLE_POT1_ADC() (ADMUX = (ADMUX & ADMUX_DEFAULT) | ADC_CHANNEL_2) //ADC Channel 2 (POT_1)
 #define ENABLE_TEMP_ADC() (ADMUX = (ADMUX & ADMUX_DEFAULT) | ADC_CHANNEL_3) //ADC Channel 3 (Temp)
 
-#define ENABLE_HEATER() (TCCR1A |= 1<<2) //Macro function to enable the heater
-#define DISABLE_HEATER() (TCCR1A &= ~1<<2)
-
-#define ENABLE_FAN() (TCCR1A |= 1<<6) //Macro function to enable the fan
-#define DISABLE_FAN() (TCCR1A &= ~1<<6)
-
-#define ENABLE_LIGHT() (TCCR1A |= 1<<4) //Macro function to enable the light
-#define DISABLE_LIGHT() (TCCR1A &= ~1<<4)
-
 //States for receiving data via UART
 #define StartByte 0
 #define InstByte 1
@@ -97,11 +88,11 @@ void Setup(){
 	DDRC = 0xFF; //Set PORTC as output
 	DDRB = 0b11100000;
 	
+	/*
 	//Setup OCR 
 	TCCR1A = 0b10100010; //Enable OCR1-ABC
 	TCCR1B = 0b00011010; //8x pre-scaler default PWM mode
-
-	ICR1 = PWM_FREQUENCY; //Set ICR to 20khz (50us)
+	ICR1 = PWM_FREQUENCY; //Set ICR to 20khz (50us)	*/		TCCR1A = 0b10101010; //Fast PWM CTC	TCCR1B = 0b00011001; //Fast PWM, 8 prescaler	ICR1 = 399; //20khz
 	
 	//Setup the ADC 
 	ADMUX = 0b11100000;
@@ -110,10 +101,10 @@ void Setup(){
 	//Use switches	
 	DDRE = 3;
 	PORTE = 0x00;
-	
+	/*
 	DISABLE_LIGHT();
 	DISABLE_HEATER();
-	DISABLE_FAN();	
+	DISABLE_FAN();	*/
 }
 
 //Send data to UDR1 register to be transmitted once the register is empty
@@ -161,36 +152,22 @@ void Set(unsigned char INS){
 		
 		//Set Heater PWM to inputed data
 		case SET_HEATER:
-			if(LSB == 0 && MSB == 0) DISABLE_HEATER();
-			else{
-				ENABLE_HEATER();
-				OCR1C = LSB << 8 | MSB;
-			}
+			OCR1CH = MSB;
+			OCR1CL = LSB;
 			Transmit_Short(SET_HEATER, OCR1C); //Send back instruction to confirm
 		break;
 		
 		//Set Light PWM to inputed data
 		case SET_LIGHT:
-			if(LSB == 0 && MSB == 0) DISABLE_LIGHT();
-			else{
-				ENABLE_LIGHT();	
-				OCR1B = LSB << 8 | MSB;
-			}
+			OCR1BH = MSB;
+			OCR1BL = LSB;
 			Transmit_Short(SET_LIGHT, OCR1B); //Send back instruction to confirm
 		break;
 		
 		//Set Motor PWM to inputed data
 		case SET_MOTOR:
-			if(LSB == 0 && MSB == 0) {
-				DISABLE_FAN();
-				OCR1A = 0;
-			}
-			else{
-		
-				ENABLE_FAN();
-				OCR1A = LSB << 8 | MSB;
-
-			}
+			OCR1AH = MSB;
+			OCR1AL = LSB;
 			Transmit_Short(SET_MOTOR, OCR1A); //Send back instruction to confirm
 		break;
 	}

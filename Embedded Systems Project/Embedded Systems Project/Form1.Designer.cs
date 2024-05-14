@@ -2,8 +2,6 @@
 using Bulb;
 using AquaControls;
 using System.Windows.Forms;
-using System.Windows.Forms.DataVisualization.Charting;
-
 using System.Linq.Expressions;
 
 namespace Embedded_Systems_Project
@@ -105,6 +103,7 @@ namespace Embedded_Systems_Project
             PotGauge2 = new AquaGauge();
             PotGauge1 = new AquaGauge();
             TempPage = new TabPage();
+            TempPlot = new ScottPlot.WinForms.FormsPlot();
             label21 = new Label();
             label20 = new Label();
             label19 = new Label();
@@ -117,7 +116,6 @@ namespace Embedded_Systems_Project
             POT2_TIMER = new System.Windows.Forms.Timer(components);
             LIGHT_TIMER = new System.Windows.Forms.Timer(components);
             DATABASE_TIMER = new System.Windows.Forms.Timer(components);
-            TempPlot = new ScottPlot.WinForms.FormsPlot();
             SerialPortBox.SuspendLayout();
             DatabaseGroup.SuspendLayout();
             TabController.SuspendLayout();
@@ -377,7 +375,7 @@ namespace Embedded_Systems_Project
             TabController.Location = new Point(12, 12);
             TabController.Name = "TabController";
             TabController.SelectedIndex = 0;
-            TabController.Size = new Size(541, 662);
+            TabController.Size = new Size(541, 666);
             TabController.TabIndex = 2;
             TabController.Selecting += TabController_Selecting;
             // 
@@ -388,7 +386,7 @@ namespace Embedded_Systems_Project
             SetupTabPage.Location = new Point(4, 24);
             SetupTabPage.Name = "SetupTabPage";
             SetupTabPage.Padding = new Padding(3);
-            SetupTabPage.Size = new Size(533, 634);
+            SetupTabPage.Size = new Size(533, 638);
             SetupTabPage.TabIndex = 0;
             SetupTabPage.Text = "Setup";
             SetupTabPage.UseVisualStyleBackColor = true;
@@ -427,7 +425,7 @@ namespace Embedded_Systems_Project
             DigitalPage.Location = new Point(4, 24);
             DigitalPage.Name = "DigitalPage";
             DigitalPage.Padding = new Padding(3);
-            DigitalPage.Size = new Size(533, 634);
+            DigitalPage.Size = new Size(533, 638);
             DigitalPage.TabIndex = 1;
             DigitalPage.Text = "Digital I/O";
             DigitalPage.UseVisualStyleBackColor = true;
@@ -738,7 +736,7 @@ namespace Embedded_Systems_Project
             PortLightsPage.Location = new Point(4, 24);
             PortLightsPage.Name = "PortLightsPage";
             PortLightsPage.Padding = new Padding(3);
-            PortLightsPage.Size = new Size(533, 634);
+            PortLightsPage.Size = new Size(533, 638);
             PortLightsPage.TabIndex = 2;
             PortLightsPage.Text = "Ports-Lights";
             PortLightsPage.UseVisualStyleBackColor = true;
@@ -773,7 +771,6 @@ namespace Embedded_Systems_Project
             LightScrollBar.Size = new Size(39, 201);
             LightScrollBar.TabIndex = 4;
             LightScrollBar.Value = 100;
-            LightScrollBar.Scroll += LightScrollBar_Scroll;
             // 
             // LIGHT_LABEL
             // 
@@ -882,10 +879,18 @@ namespace Embedded_Systems_Project
             TempPage.Location = new Point(4, 24);
             TempPage.Name = "TempPage";
             TempPage.Padding = new Padding(3);
-            TempPage.Size = new Size(533, 634);
+            TempPage.Size = new Size(533, 638);
             TempPage.TabIndex = 3;
             TempPage.Text = "Temp Control";
             TempPage.UseVisualStyleBackColor = true;
+            // 
+            // TempPlot
+            // 
+            TempPlot.DisplayScale = 1F;
+            TempPlot.Location = new Point(195, 23);
+            TempPlot.Name = "TempPlot";
+            TempPlot.Size = new Size(317, 251);
+            TempPlot.TabIndex = 7;
             // 
             // label21
             // 
@@ -954,31 +959,23 @@ namespace Embedded_Systems_Project
             // 
             // POT1_TIMER
             // 
-            POT1_TIMER.Interval = 50;
+            POT1_TIMER.Interval = 12;
             POT1_TIMER.Tick += POT1_TIMER_Tick;
             // 
             // POT2_TIMER
             // 
-            POT2_TIMER.Interval = 50;
+            POT2_TIMER.Interval = 11;
             POT2_TIMER.Tick += POT2_TIMER_Tick;
             // 
             // LIGHT_TIMER
             // 
-            LIGHT_TIMER.Interval = 50;
+            LIGHT_TIMER.Interval = 10;
             LIGHT_TIMER.Tick += LIGHT_TIMER_Tick;
             // 
             // DATABASE_TIMER
             // 
-            DATABASE_TIMER.Interval = 10;
+            DATABASE_TIMER.Interval = 15;
             DATABASE_TIMER.Tick += DATABASE_TIMER_Tick;
-            // 
-            // TempPlot
-            // 
-            TempPlot.DisplayScale = 1F;
-            TempPlot.Location = new Point(195, 23);
-            TempPlot.Name = "TempPlot";
-            TempPlot.Size = new Size(317, 251);
-            TempPlot.TabIndex = 7;
             // 
             // BoardControlForm
             // 

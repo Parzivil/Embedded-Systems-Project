@@ -1,26 +1,24 @@
 using Bulb;
-using Microsoft.Identity.Client;
 using MySql.Data.MySqlClient;
-using ScottPlot.AxisPanels;
 using System.IO.Ports;
-using System.Reflection;
 
 namespace Embedded_Systems_Project
 {
     public partial class BoardControlForm : Form
     {
-        private const string serverName = "127.0.0.1";
-        private const string userName = "ST123456";
-        private const string databaseName = "temperature_record";
-        private const string passwordName = "ZJx(]8djn-3@.Q/u";
-        private const string tableName = "temperature";
-
         /// <summary>
         /// Database Connection
         /// </summary>
         MySqlConnection mySqlConnection;
-
         MySqlDataReader mySqlDataReader;
+        //Database Credentials
+        readonly string SERVER_NAME = "127.0.0.1";
+        readonly string USER_NAME = "ST123456";
+        readonly string DATABASE_NAME = "temperature_record";
+        readonly string PASSWORD_NAME = "ZJx(]8djn-3@.Q/u";
+        readonly string TABLE_NAME = "temperature";
+
+
 
         //Read instruction bytes
         private const byte TXCHECK = 0x00;
@@ -58,7 +56,6 @@ namespace Embedded_Systems_Project
 
         //https://scottplot.net/cookbook/5.0/
 
-
         /// <summary>
         /// Constructor for BoardControlForm Class
         /// </summary>
@@ -66,11 +63,11 @@ namespace Embedded_Systems_Project
         {
             InitializeComponent();
 
-            ServerNameSelection.Items.Add(serverName);
-            ServerNameSelection.Text = serverName;
-            UsernameTextBox.Text = userName;
-            PasswordTextBox.Text = passwordName;
-            DatabaseTextBox.Text = databaseName;
+            ServerNameSelection.Items.Add(SERVER_NAME);
+            ServerNameSelection.Text = SERVER_NAME;
+            UsernameTextBox.Text = USER_NAME;
+            PasswordTextBox.Text = PASSWORD_NAME;
+            DatabaseTextBox.Text = DATABASE_NAME;
 
             TempPlot.Interaction.Disable(); //Prevent interaction with the plot chart
 
@@ -156,7 +153,6 @@ namespace Embedded_Systems_Project
                 MessageBox.Show(ex.Message);
             }
         }
-
 
         private void DatabaseDisconnectButton_Click(object sender, EventArgs e)
         {
@@ -268,8 +264,10 @@ namespace Embedded_Systems_Project
                             STOP_BYTE };
 
 
-            string output = System.Text.Encoding.Default.GetString(bytes);
-            serialPort.WriteLine(output);
+            //string output = System.Text.Encoding.Default.GetString(bytes);
+            //serialPort.WriteLine(output);
+
+            serialPort.Write(bytes, 0, bytes.Length);
         }
 
         //Disconnect from serial
@@ -305,16 +303,13 @@ namespace Embedded_Systems_Project
         {
             if (PC7_CheckBox.Checked) PORTC |= 1 << 7;
             else PORTC &= ~(1 << 7);
-
             refreshSevenSeg();
-
         }
 
         private void PC6_CheckBox_CheckedChanged(object sender, EventArgs e)
         {
             if (PC6_CheckBox.Checked) PORTC |= 1 << 6;
             else PORTC &= ~(1 << 6);
-
             refreshSevenSeg();
         }
 
@@ -322,7 +317,6 @@ namespace Embedded_Systems_Project
         {
             if (PC5_CheckBox.Checked) PORTC |= 1 << 5;
             else PORTC &= ~(1 << 5);
-
             refreshSevenSeg();
         }
 
@@ -330,7 +324,6 @@ namespace Embedded_Systems_Project
         {
             if (PC4_CheckBox.Checked) PORTC |= 1 << 4;
             else PORTC &= ~(1 << 4);
-
             refreshSevenSeg();
         }
 
@@ -338,7 +331,6 @@ namespace Embedded_Systems_Project
         {
             if (PC3_CheckBox.Checked) PORTC |= 1 << 3;
             else PORTC &= ~(1 << 3);
-
             refreshSevenSeg();
         }
 
@@ -346,7 +338,6 @@ namespace Embedded_Systems_Project
         {
             if (PC2_CheckBox.Checked) PORTC |= 1 << 2;
             else PORTC &= ~(1 << 2);
-
             refreshSevenSeg();
         }
 
@@ -354,7 +345,6 @@ namespace Embedded_Systems_Project
         {
             if (PC1_CheckBox.Checked) PORTC |= 1 << 1;
             else PORTC &= ~(1 << 1);
-
             refreshSevenSeg();
         }
 
@@ -363,7 +353,6 @@ namespace Embedded_Systems_Project
             if (PC0_CheckBox.Checked) PORTC |= 1 << 0;
             else PORTC &= ~(1 << 0);
             refreshSevenSeg();
-
         }
 
         /// <summary>
@@ -432,7 +421,6 @@ namespace Embedded_Systems_Project
         }
 
 
-
         private void TabController_Selecting(object sender, EventArgs e)
         {
             TabPage currentTab = (sender as TabControl).SelectedTab;
@@ -447,6 +435,9 @@ namespace Embedded_Systems_Project
                 PORTC_LIGHTS_TIMER.Enabled = true;
             }
         }
+
+
+        //Timers
 
         private void PORTC_LIGHTS_TIMER_Tick(object sender, EventArgs e)
         {
@@ -469,8 +460,6 @@ namespace Embedded_Systems_Project
             {
                 float val = secondByte << 8 | firstByte;
                 PotGauge1.Value = val / (0xFFFF / PotGauge2.MaxValue);
-
-
             }
         }
 
@@ -496,22 +485,29 @@ namespace Embedded_Systems_Project
                 float val = (secondByte << 8 | firstByte) / 0xFF;
                 LightGauge.Value = val;
             }
-        }
 
-        private void LightScrollBar_Scroll(object sender, ScrollEventArgs e)
-        {
             int percentage = 100 - LightScrollBar.Value;
-            LightPercentageLabel.Text = percentage.ToString() + "%";
-            writeSerial(SET_LIGHT, (ushort)(percentage * 100 / 0xFFFF));
-            ReadSerial(); //Clear the read buffer of the confirmation code
+            if (percentage >= 0)
+            {
+                ushort value = (ushort)((percentage * 0xFFFF) / 100);
+                LightPercentageLabel.Text = percentage.ToString() + "%" + " DEBUG: " + value;
+                writeSerial(SET_LIGHT, value);
+                ReadSerial(); //Clear the read buffer of the confirmation code
+            }
+            else LightScrollBar.Value = 0;
         }
 
+
+        /// <summary>
+        /// Sends data to the set database
+        /// </summary>
+        /// <param name="data"></param>
         private void SendToDatabase(float data)
         {
 
             mySqlConnection.Open();
-            string Query = "insert into " + databaseName + "." + tableName + "(timeStamp,temperature,remark) values('"
-                + DateTime.Now + "','" + data + "','" + userName + "');";
+            string Query = "insert into " + DATABASE_NAME + "." + TABLE_NAME + "(timeStamp,temperature,remark) values('"
+                + DateTime.Now + "','" + data + "','" + USER_NAME + "');";
             MySqlCommand Command = new MySqlCommand(Query, mySqlConnection);
 
 
@@ -530,11 +526,7 @@ namespace Embedded_Systems_Project
 
                 double tempF = ((float)temp * TEMP_CONST) / 0xFFFF;
                 SendToDatabase((float)Math.Round(tempF, 2));
-
-                logger1.Add(Walker1.Next((int)tempF));
-                logger1.Add(Walker1.Next(DATABASE_TIMER.Interval));
             }
-
         }
     }
 }

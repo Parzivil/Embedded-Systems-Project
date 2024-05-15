@@ -1,4 +1,4 @@
-using Bulb;
+using Embedded_Systems_Project.Addons;
 using MySql.Data.MySqlClient;
 using System.IO.Ports;
 
@@ -9,17 +9,17 @@ namespace Embedded_Systems_Project
         /// <summary>
         /// Database Connection
         /// </summary>
-        MySqlConnection mySqlConnection;
-        MySqlDataReader mySqlDataReader;
+        private MySqlConnection mySqlConnection;
+        private MySqlDataReader mySqlDataReader;
+
         //Database Credentials
-        readonly string SERVER_NAME = "127.0.0.1";
-        readonly string USER_NAME = "ST123456";
-        readonly string DATABASE_NAME = "temperature_record";
-        readonly string PASSWORD_NAME = "ZJx(]8djn-3@.Q/u";
-        readonly string TABLE_NAME = "temperature";
+        private readonly string SERVER_NAME = "127.0.0.1";
+        private readonly string USER_NAME = "ST123456";
+        private readonly string DATABASE_NAME = "temperature_record";
+        private readonly string PASSWORD_NAME = "ZJx(]8djn-3@.Q/u";
+        private readonly string TABLE_NAME = "temperature";
 
-
-
+        private static LiveGraphUpdater graphUpdater;
         //Read instruction bytes
         private const byte TXCHECK = 0x00;
         private const byte READ_PINA = 0x01;
@@ -38,23 +38,20 @@ namespace Embedded_Systems_Project
         private const byte START_BYTE = 0x53;
         private const byte STOP_BYTE = 0xAA;
 
-        private const float TEMP_CONST = 26;
+        private float TEMP_CONST = 26;
 
         //byte variables to store the incoming bytes
         private static byte instructionByte, firstByte, secondByte;
-
-        static SerialPort serialPort = new(); //Create a new serial port
+        private static SerialPort serialPort = new(); //Create a new serial port
 
         private bool COM_Selected = false;
         private bool Baud_Selected = false;
-        private bool SerialConnected = false;
+        private readonly bool SerialConnected = false;
 
         private int PORTC = 0x00;
-        private char[] SevenSegDisplayChars = new char[2];
+        private readonly char[] SevenSegDisplayChars = new char[2];
 
-        private LedBulb[] PORTA_lights;
-
-        //https://scottplot.net/cookbook/5.0/
+        private readonly LedBulb[] PORTA_lights;
 
         /// <summary>
         /// Constructor for BoardControlForm Class
@@ -63,7 +60,7 @@ namespace Embedded_Systems_Project
         {
             InitializeComponent();
 
-            ServerNameSelection.Items.Add(SERVER_NAME);
+            _ = ServerNameSelection.Items.Add(SERVER_NAME);
             ServerNameSelection.Text = SERVER_NAME;
             UsernameTextBox.Text = USER_NAME;
             PasswordTextBox.Text = PASSWORD_NAME;
@@ -77,12 +74,57 @@ namespace Embedded_Systems_Project
 
             int[] baudrates = { 4800, 9600, 19200, 38400, 57600, 115200, 230400, 460800, 921600 };
 
-            foreach (string portName in portNames) _ = COM_Port_Dropdown.Items.Add(portName); //Add ports to list
+            foreach (string portName in portNames)
+            {
+                _ = COM_Port_Dropdown.Items.Add(portName); //Add ports to list
+            }
 
-            foreach (int baudrate in baudrates) _ = BaudrateSelection.Items.Add(baudrate); //Add Baud rates to list
+            foreach (int baudrate in baudrates)
+            {
+                _ = BaudrateSelection.Items.Add(baudrate); //Add Baud rates to list
+            }
 
             BaudrateSelection.Text = baudrates[3].ToString();
+
+            graphUpdater = new LiveGraphUpdater(TempPlot);
+            graphUpdater.StartUpdating(new double[0]);
+
         }
+
+        /// <summary>
+        /// Determines what page the user is on
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void TabController_Selecting(object sender, EventArgs e)
+        {
+            TabPage currentTab = (sender as TabControl).SelectedTab;
+
+            if (currentTab == DigitalPage)
+            {
+                EnableGaugeTimers(false);
+                PORTC_LIGHTS_TIMER.Enabled = true;
+                DATABASE_TIMER.Enabled = false;
+            }
+            else if (currentTab == PortLightsPage)
+            {
+                EnableGaugeTimers(true);
+                DATABASE_TIMER.Enabled = false;
+            }
+
+            else if (currentTab == TempPage)
+            {
+                DATABASE_TIMER.Enabled = true;
+            }
+            else
+            {
+                EnableGaugeTimers(false);
+                PORTC_LIGHTS_TIMER.Enabled = false;
+                DATABASE_TIMER.Enabled = false;
+
+            }
+        }
+
 
         /// <summary>
         /// Button event for connected to serial
@@ -100,7 +142,7 @@ namespace Embedded_Systems_Project
                 {
                     //Set a new serial port
                     serialPort = new SerialPort(COM_Port_Dropdown.SelectedItem.ToString(),
-                                            Int32.Parse(BaudrateSelection.SelectedItem.ToString()));
+                                            int.Parse(BaudrateSelection.SelectedItem.ToString()));
 
                     serialPort.Open(); //Open the serial port
 
@@ -113,9 +155,10 @@ namespace Embedded_Systems_Project
                     {
                         SerialPortStatusBulb.On = true; //Turn connection status bulb on
                     }
-                    else SerialPortStatusBulb.Blink(30); //Blink if there is an issue
-
-
+                    else
+                    {
+                        SerialPortStatusBulb.Blink(30); //Blink if there is an issue
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -127,6 +170,12 @@ namespace Embedded_Systems_Project
 
         }
 
+
+        /// <summary>
+        /// Runs when the database connect button is pressed
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void DatabaseConnectButton_Click(object sender, EventArgs e)
         {
             try
@@ -136,24 +185,27 @@ namespace Embedded_Systems_Project
                                             "database=" + DatabaseTextBox.Text + ";" +
                                             "password=" + PasswordTextBox.Text + ";";
                 mySqlConnection = new MySqlConnection(connectionString);
-                mySqlConnection.Open();
-
-                if (mySqlConnection.State == System.Data.ConnectionState.Open) ServerConnectionLED.On = true;
-                else ServerConnectionLED.Blink(30);
-
-                mySqlConnection.Close();
-                if (serialPort.IsOpen) DATABASE_TIMER.Enabled = true;
 
 
+                ServerConnectionLED.On = true;
+
+                if (serialPort.IsOpen)
+                {
+                    DATABASE_TIMER.Enabled = true;
+                }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 ServerConnectionLED.On = false;
                 DATABASE_TIMER.Enabled = false;
-                MessageBox.Show(ex.Message);
             }
         }
 
+        /// <summary>
+        /// Runs when the database disconnect button is pressed
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void DatabaseDisconnectButton_Click(object sender, EventArgs e)
         {
             mySqlConnection.Close();
@@ -186,7 +238,7 @@ namespace Embedded_Systems_Project
         /// Reads the serial port and outputs a byte array containing the data read
         /// </summary>
         /// <returns>returns a byte array containing the data from the serial port</returns>
-        private byte[] ReadSerialPackage()
+        private byte[]? ReadSerialPackage()
         {
             List<byte> packageBytes = new(); //List to store bytes
             bool packageStartFound = false; //Boolen to store if the first byte is found
@@ -207,11 +259,17 @@ namespace Embedded_Systems_Project
                     else if (packageStartFound)
                     {
                         packageBytes.Add(currentByte);
-                        if (currentByte == STOP_BYTE) return packageBytes.ToArray();
+                        if (currentByte == STOP_BYTE)
+                        {
+                            return packageBytes.ToArray();
+                        }
                     }
                 }
 
-                else break; //Break out of the loop if no bytes are found
+                else
+                {
+                    break; //Break out of the loop if no bytes are found
+                }
             }
 
 
@@ -296,64 +354,7 @@ namespace Embedded_Systems_Project
             Baud_Selected = true;
         }
 
-        //
-        // Control the seven segment display
-        //
-        private void PC7_CheckBox_CheckedChanged(object sender, EventArgs e)
-        {
-            if (PC7_CheckBox.Checked) PORTC |= 1 << 7;
-            else PORTC &= ~(1 << 7);
-            refreshSevenSeg();
-        }
 
-        private void PC6_CheckBox_CheckedChanged(object sender, EventArgs e)
-        {
-            if (PC6_CheckBox.Checked) PORTC |= 1 << 6;
-            else PORTC &= ~(1 << 6);
-            refreshSevenSeg();
-        }
-
-        private void PC5_CheckBox_CheckedChanged(object sender, EventArgs e)
-        {
-            if (PC5_CheckBox.Checked) PORTC |= 1 << 5;
-            else PORTC &= ~(1 << 5);
-            refreshSevenSeg();
-        }
-
-        private void PC4_CheckBox_CheckedChanged(object sender, EventArgs e)
-        {
-            if (PC4_CheckBox.Checked) PORTC |= 1 << 4;
-            else PORTC &= ~(1 << 4);
-            refreshSevenSeg();
-        }
-
-        private void PC3_CheckBox_CheckedChanged(object sender, EventArgs e)
-        {
-            if (PC3_CheckBox.Checked) PORTC |= 1 << 3;
-            else PORTC &= ~(1 << 3);
-            refreshSevenSeg();
-        }
-
-        private void PC2_CheckBox_CheckedChanged(object sender, EventArgs e)
-        {
-            if (PC2_CheckBox.Checked) PORTC |= 1 << 2;
-            else PORTC &= ~(1 << 2);
-            refreshSevenSeg();
-        }
-
-        private void PC1_CheckBox_CheckedChanged(object sender, EventArgs e)
-        {
-            if (PC1_CheckBox.Checked) PORTC |= 1 << 1;
-            else PORTC &= ~(1 << 1);
-            refreshSevenSeg();
-        }
-
-        private void PC0_CheckBox_CheckedChanged(object sender, EventArgs e)
-        {
-            if (PC0_CheckBox.Checked) PORTC |= 1 << 0;
-            else PORTC &= ~(1 << 0);
-            refreshSevenSeg();
-        }
 
         /// <summary>
         /// Takes in the current binary value of the switches, 
@@ -362,8 +363,8 @@ namespace Embedded_Systems_Project
         private void refreshSevenSeg()
         {
             string portC_hex = PORTC.ToString("X4"); //Convert to hex 
-            sevenSeg_1.Value = portC_hex[portC_hex.Length - 2].ToString(); //Set the first character
-            sevenSeg_2.Value = portC_hex[portC_hex.Length - 1].ToString(); //Set the second character
+            sevenSeg_1.Value = portC_hex[^2].ToString(); //Set the first character
+            sevenSeg_2.Value = portC_hex[^1].ToString(); //Set the second character
 
             writeSerial(SET_PORTC, (byte)PORTC, (byte)PORTC); //Write the values to the serial PORT
         }
@@ -420,23 +421,6 @@ namespace Embedded_Systems_Project
 
         }
 
-
-        private void TabController_Selecting(object sender, EventArgs e)
-        {
-            TabPage currentTab = (sender as TabControl).SelectedTab;
-
-            if (currentTab == PortLightsPage)
-            {
-                EnableGaugeTimers(true);
-            }
-            else if (currentTab == DigitalPage)
-            {
-                EnableGaugeTimers(false);
-                PORTC_LIGHTS_TIMER.Enabled = true;
-            }
-        }
-
-
         //Timers
 
         private void PORTC_LIGHTS_TIMER_Tick(object sender, EventArgs e)
@@ -458,7 +442,7 @@ namespace Embedded_Systems_Project
 
             if (instructionByte == READ_POT1)
             {
-                float val = secondByte << 8 | firstByte;
+                float val = (secondByte << 8) | firstByte;
                 PotGauge1.Value = val / (0xFFFF / PotGauge2.MaxValue);
             }
         }
@@ -470,7 +454,7 @@ namespace Embedded_Systems_Project
 
             if (instructionByte == READ_POT2)
             {
-                float val = secondByte << 8 | firstByte;
+                float val = (secondByte << 8) | firstByte;
                 PotGauge2.Value = val / (0xFFFF / PotGauge2.MaxValue);
             }
         }
@@ -482,19 +466,22 @@ namespace Embedded_Systems_Project
 
             if (instructionByte == READ_LIGHT)
             {
-                float val = (secondByte << 8 | firstByte) / 0xFF;
+                float val = ((secondByte << 8) | firstByte) / 0xFF;
                 LightGauge.Value = val;
             }
 
             int percentage = 100 - LightScrollBar.Value;
             if (percentage >= 0)
             {
-                ushort value = (ushort)((percentage * 0xFFFF) / 100);
+                ushort value = (ushort)(percentage * 0xFFFF / 100);
                 LightPercentageLabel.Text = percentage.ToString() + "%" + " DEBUG: " + value;
                 writeSerial(SET_LIGHT, value);
                 ReadSerial(); //Clear the read buffer of the confirmation code
             }
-            else LightScrollBar.Value = 0;
+            else
+            {
+                LightScrollBar.Value = 0;
+            }
         }
 
 
@@ -508,7 +495,7 @@ namespace Embedded_Systems_Project
             mySqlConnection.Open();
             string Query = "insert into " + DATABASE_NAME + "." + TABLE_NAME + "(timeStamp,temperature,remark) values('"
                 + DateTime.Now + "','" + data + "','" + USER_NAME + "');";
-            MySqlCommand Command = new MySqlCommand(Query, mySqlConnection);
+            MySqlCommand Command = new(Query, mySqlConnection);
 
 
             mySqlDataReader = Command.ExecuteReader(); //Exicute the command
@@ -520,13 +507,141 @@ namespace Embedded_Systems_Project
         {
             writeSerial(READ_TEMP);
             ReadSerial();
+
             if (instructionByte == READ_TEMP)
             {
+                TEMP_CONST = (float)TempConstantAdjuster.Value;
                 char temp = (char)((firstByte << 8) + secondByte);
 
-                double tempF = ((float)temp * TEMP_CONST) / 0xFFFF;
-                SendToDatabase((float)Math.Round(tempF, 2));
+                writeSerial(TXCHECK);
+                ReadSerial();
+
+                double tempF = temp * TEMP_CONST / 0xFFFF;
+
+
+                graphUpdater.Update(tempF); //Plot the temp
+                SendToDatabase((float)Math.Round(tempF, 2)); //Send the data to the database
+
+                TempLabel.Text = tempF.ToString();
+
+                Invalidate();
+                Update();
             }
+        }
+
+        //
+        // Control the seven segment display
+        //
+        private void PC7_CheckBox_CheckedChanged(object sender, EventArgs e)
+        {
+            if (PC7_CheckBox.Checked)
+            {
+                PORTC |= 1 << 7;
+            }
+            else
+            {
+                PORTC &= ~(1 << 7);
+            }
+
+            refreshSevenSeg();
+        }
+
+        private void PC6_CheckBox_CheckedChanged(object sender, EventArgs e)
+        {
+            if (PC6_CheckBox.Checked)
+            {
+                PORTC |= 1 << 6;
+            }
+            else
+            {
+                PORTC &= ~(1 << 6);
+            }
+
+            refreshSevenSeg();
+        }
+
+        private void PC5_CheckBox_CheckedChanged(object sender, EventArgs e)
+        {
+            if (PC5_CheckBox.Checked)
+            {
+                PORTC |= 1 << 5;
+            }
+            else
+            {
+                PORTC &= ~(1 << 5);
+            }
+
+            refreshSevenSeg();
+        }
+
+        private void PC4_CheckBox_CheckedChanged(object sender, EventArgs e)
+        {
+            if (PC4_CheckBox.Checked)
+            {
+                PORTC |= 1 << 4;
+            }
+            else
+            {
+                PORTC &= ~(1 << 4);
+            }
+
+            refreshSevenSeg();
+        }
+
+        private void PC3_CheckBox_CheckedChanged(object sender, EventArgs e)
+        {
+            if (PC3_CheckBox.Checked)
+            {
+                PORTC |= 1 << 3;
+            }
+            else
+            {
+                PORTC &= ~(1 << 3);
+            }
+
+            refreshSevenSeg();
+        }
+
+        private void PC2_CheckBox_CheckedChanged(object sender, EventArgs e)
+        {
+            if (PC2_CheckBox.Checked)
+            {
+                PORTC |= 1 << 2;
+            }
+            else
+            {
+                PORTC &= ~(1 << 2);
+            }
+
+            refreshSevenSeg();
+        }
+
+        private void PC1_CheckBox_CheckedChanged(object sender, EventArgs e)
+        {
+            if (PC1_CheckBox.Checked)
+            {
+                PORTC |= 1 << 1;
+            }
+            else
+            {
+                PORTC &= ~(1 << 1);
+            }
+
+            refreshSevenSeg();
+        }
+
+        private void PC0_CheckBox_CheckedChanged(object sender, EventArgs e)
+        {
+            if (PC0_CheckBox.Checked)
+            {
+                PORTC |= 1 << 0;
+            }
+            else
+            {
+                PORTC &= ~(1 << 0);
+            }
+
+            refreshSevenSeg();
         }
     }
 }

@@ -20,25 +20,28 @@
  * 
  */
 
-namespace DmitryBrant.CustomControls
+namespace Embedded_Systems_Project.Addons
 {
     public class SevenSegment : UserControl
     {
         public SevenSegment()
         {
-            this.SuspendLayout();
-            this.Name = "SevenSegment";
-            this.Size = new System.Drawing.Size(32, 64);
-            this.Paint += new System.Windows.Forms.PaintEventHandler(this.SevenSegment_Paint);
-            this.Resize += new System.EventHandler(this.SevenSegment_Resize);
-            this.ResumeLayout(false);
+            SuspendLayout();
+            Name = "SevenSegment";
+            Size = new System.Drawing.Size(32, 64);
+            Paint += new System.Windows.Forms.PaintEventHandler(SevenSegment_Paint);
+            Resize += new System.EventHandler(SevenSegment_Resize);
+            ResumeLayout(false);
 
-            this.TabStop = false;
-            this.Padding = new Padding(4, 4, 4, 4);
-            this.DoubleBuffered = true;
+            TabStop = false;
+            Padding = new Padding(4, 4, 4, 4);
+            DoubleBuffered = true;
 
             segPoints = new Point[7][];
-            for (int i = 0; i < 7; i++) segPoints[i] = new Point[6];
+            for (int i = 0; i < 7; i++)
+            {
+                segPoints[i] = new Point[6];
+            }
 
             RecalculatePoints();
         }
@@ -109,10 +112,10 @@ namespace DmitryBrant.CustomControls
             segPoints[p][5].X = halfWidth + 1; segPoints[p][5].Y = gridHeight - halfWidth;
         }
 
-        private Point[][] segPoints;
+        private readonly Point[][] segPoints;
 
-        private int gridHeight = 80;
-        private int gridWidth = 48;
+        private readonly int gridHeight = 80;
+        private readonly int gridWidth = 48;
         private int elementWidth = 10;
         private float italicFactor = 0.0F;
         private Color colorBackground = Color.DarkGray;
@@ -123,27 +126,27 @@ namespace DmitryBrant.CustomControls
         /// <summary>
         /// Background color of the 7-segment display.
         /// </summary>
-        public Color ColorBackground { get { return colorBackground; } set { colorBackground = value; Invalidate(); } }
+        public Color ColorBackground { get => colorBackground; set { colorBackground = value; Invalidate(); } }
         /// <summary>
         /// Color of inactive LED segments.
         /// </summary>
-        public Color ColorDark { get { return colorDark; } set { colorDark = value; Invalidate(); } }
+        public Color ColorDark { get => colorDark; set { colorDark = value; Invalidate(); } }
         /// <summary>
         /// Color of active LED segments.
         /// </summary>
-        public Color ColorLight { get { return colorLight; } set { colorLight = value; Invalidate(); } }
+        public Color ColorLight { get => colorLight; set { colorLight = value; Invalidate(); } }
 
         /// <summary>
         /// Width of LED segments.
         /// </summary>
-        public int ElementWidth { get { return elementWidth; } set { elementWidth = value; RecalculatePoints(); Invalidate(); } }
+        public int ElementWidth { get => elementWidth; set { elementWidth = value; RecalculatePoints(); Invalidate(); } }
         /// <summary>
         /// Shear coefficient for italicizing the displays. Try a value like -0.1.
         /// </summary>
-        public float ItalicFactor { get { return italicFactor; } set { italicFactor = value; Invalidate(); } }
+        public float ItalicFactor { get => italicFactor; set { italicFactor = value; Invalidate(); } }
 
-        private void SevenSegment_Resize(object sender, EventArgs e) { this.Invalidate(); }
-        protected override void OnPaddingChanged(EventArgs e) { base.OnPaddingChanged(e); this.Invalidate(); }
+        private void SevenSegment_Resize(object sender, EventArgs e) { Invalidate(); }
+        protected override void OnPaddingChanged(EventArgs e) { base.OnPaddingChanged(e); Invalidate(); }
 
         protected override void OnPaintBackground(PaintEventArgs e)
         {
@@ -167,7 +170,7 @@ namespace DmitryBrant.CustomControls
             Dash = 0x8, Equals = 0x48
         }
 
-        private string theValue = null;
+        private string? theValue = null;
 
         /// <summary>
         /// Character to be displayed on the seven segments. Supported characters
@@ -175,7 +178,7 @@ namespace DmitryBrant.CustomControls
         /// </summary>
         public string Value
         {
-            get { return theValue; }
+            get => theValue;
             set
             {
                 customPattern = 0;
@@ -186,7 +189,16 @@ namespace DmitryBrant.CustomControls
                     try
                     {
                         int tempValue = Convert.ToInt32(value);
-                        if (tempValue > 9) tempValue = 9; if (tempValue < 0) tempValue = 0;
+                        if (tempValue > 9)
+                        {
+                            tempValue = 9;
+                        }
+
+                        if (tempValue < 0)
+                        {
+                            tempValue = 0;
+                        }
+
                         switch (tempValue)
                         {
                             case 0: customPattern = (int)ValuePattern.Zero; break;
@@ -246,17 +258,17 @@ namespace DmitryBrant.CustomControls
         /// integer value where bits 0 through 6 correspond to each respective LED
         /// segment.
         /// </summary>
-        public int CustomPattern { get { return customPattern; } set { customPattern = value; Invalidate(); } }
+        public int CustomPattern { get => customPattern; set { customPattern = value; Invalidate(); } }
 
         private bool showDot = true, dotOn = false;
         /// <summary>
         /// Specifies if the decimal point LED is displayed.
         /// </summary>
-        public bool DecimalShow { get { return showDot; } set { showDot = value; Invalidate(); } }
+        public bool DecimalShow { get => showDot; set { showDot = value; Invalidate(); } }
         /// <summary>
         /// Specifies if the decimal point LED is active.
         /// </summary>
-        public bool DecimalOn { get { return dotOn; } set { dotOn = value; Invalidate(); } }
+        public bool DecimalOn { get => dotOn; set { dotOn = value; Invalidate(); } }
 
 
         private void SevenSegment_Paint(object sender, PaintEventArgs e)
@@ -268,7 +280,7 @@ namespace DmitryBrant.CustomControls
 
             // Define transformation for our container...
             RectangleF srcRect = new(0.0F, 0.0F, gridWidth, gridHeight);
-            RectangleF destRect = new(Padding.Left, Padding.Top, this.Width - Padding.Left - Padding.Right, this.Height - Padding.Top - Padding.Bottom);
+            RectangleF destRect = new(Padding.Left, Padding.Top, Width - Padding.Left - Padding.Right, Height - Padding.Top - Padding.Bottom);
 
             // Begin graphics container that remaps coordinates for our convenience
             GraphicsContainer containerState = e.Graphics.BeginContainer(destRect, srcRect, GraphicsUnit.Pixel);
@@ -290,7 +302,9 @@ namespace DmitryBrant.CustomControls
             e.Graphics.FillPolygon((useValue & 0x40) == 0x40 ? brushLight : brushDark, segPoints[6]);
 
             if (showDot)
+            {
                 e.Graphics.FillEllipse(dotOn ? brushLight : brushDark, gridWidth - 1, gridHeight - elementWidth + 1, elementWidth, elementWidth);
+            }
 
             e.Graphics.EndContainer(containerState);
         }

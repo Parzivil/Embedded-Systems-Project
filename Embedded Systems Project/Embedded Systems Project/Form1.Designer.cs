@@ -1,8 +1,7 @@
-﻿using DmitryBrant.CustomControls;
-using Bulb;
-using AquaControls;
+﻿using AquaControls;
 using System.Windows.Forms;
 using System.Linq.Expressions;
+using Embedded_Systems_Project.Addons;
 
 namespace Embedded_Systems_Project
 {
@@ -103,6 +102,9 @@ namespace Embedded_Systems_Project
             PotGauge2 = new AquaGauge();
             PotGauge1 = new AquaGauge();
             TempPage = new TabPage();
+            label22 = new Label();
+            TempConstantAdjuster = new NumericUpDown();
+            TempLabel = new Label();
             TempPlot = new ScottPlot.WinForms.FormsPlot();
             label21 = new Label();
             label20 = new Label();
@@ -125,6 +127,7 @@ namespace Embedded_Systems_Project
             groupBox1.SuspendLayout();
             PotsGroup.SuspendLayout();
             TempPage.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)TempConstantAdjuster).BeginInit();
             ((System.ComponentModel.ISupportInitialize)numericUpDown3).BeginInit();
             ((System.ComponentModel.ISupportInitialize)numericUpDown2).BeginInit();
             ((System.ComponentModel.ISupportInitialize)numericUpDown1).BeginInit();
@@ -868,6 +871,9 @@ namespace Embedded_Systems_Project
             // 
             // TempPage
             // 
+            TempPage.Controls.Add(label22);
+            TempPage.Controls.Add(TempConstantAdjuster);
+            TempPage.Controls.Add(TempLabel);
             TempPage.Controls.Add(TempPlot);
             TempPage.Controls.Add(label21);
             TempPage.Controls.Add(label20);
@@ -884,8 +890,38 @@ namespace Embedded_Systems_Project
             TempPage.Text = "Temp Control";
             TempPage.UseVisualStyleBackColor = true;
             // 
+            // label22
+            // 
+            label22.AutoSize = true;
+            label22.Location = new Point(113, 330);
+            label22.Name = "label22";
+            label22.Size = new Size(80, 15);
+            label22.TabIndex = 10;
+            label22.Text = "TEMP_CONST";
+            // 
+            // TempConstantAdjuster
+            // 
+            TempConstantAdjuster.Increment = new decimal(new int[] { 2, 0, 0, 0 });
+            TempConstantAdjuster.Location = new Point(199, 328);
+            TempConstantAdjuster.Maximum = new decimal(new int[] { 20000, 0, 0, 0 });
+            TempConstantAdjuster.Minimum = new decimal(new int[] { 10000, 0, 0, 0 });
+            TempConstantAdjuster.Name = "TempConstantAdjuster";
+            TempConstantAdjuster.Size = new Size(58, 23);
+            TempConstantAdjuster.TabIndex = 9;
+            TempConstantAdjuster.Value = new decimal(new int[] { 10000, 0, 0, 0 });
+            // 
+            // TempLabel
+            // 
+            TempLabel.AutoSize = true;
+            TempLabel.Location = new Point(199, 310);
+            TempLabel.Name = "TempLabel";
+            TempLabel.Size = new Size(44, 15);
+            TempLabel.TabIndex = 8;
+            TempLabel.Text = "label22";
+            // 
             // TempPlot
             // 
+            TempPlot.AutoValidate = AutoValidate.EnableAllowFocusChange;
             TempPlot.DisplayScale = 1F;
             TempPlot.Location = new Point(195, 23);
             TempPlot.Name = "TempPlot";
@@ -955,26 +991,31 @@ namespace Embedded_Systems_Project
             // PORTC_LIGHTS_TIMER
             // 
             PORTC_LIGHTS_TIMER.Interval = 10;
+            PORTC_LIGHTS_TIMER.Tag = "DigitalPage";
             PORTC_LIGHTS_TIMER.Tick += PORTC_LIGHTS_TIMER_Tick;
             // 
             // POT1_TIMER
             // 
             POT1_TIMER.Interval = 12;
+            POT1_TIMER.Tag = "LightsPage";
             POT1_TIMER.Tick += POT1_TIMER_Tick;
             // 
             // POT2_TIMER
             // 
             POT2_TIMER.Interval = 11;
+            POT2_TIMER.Tag = "LightsPage";
             POT2_TIMER.Tick += POT2_TIMER_Tick;
             // 
             // LIGHT_TIMER
             // 
             LIGHT_TIMER.Interval = 10;
+            LIGHT_TIMER.Tag = "LightsPage";
             LIGHT_TIMER.Tick += LIGHT_TIMER_Tick;
             // 
             // DATABASE_TIMER
             // 
-            DATABASE_TIMER.Interval = 15;
+            DATABASE_TIMER.Interval = 50;
+            DATABASE_TIMER.Tag = "TempPage";
             DATABASE_TIMER.Tick += DATABASE_TIMER_Tick;
             // 
             // BoardControlForm
@@ -1002,6 +1043,7 @@ namespace Embedded_Systems_Project
             PotsGroup.PerformLayout();
             TempPage.ResumeLayout(false);
             TempPage.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)TempConstantAdjuster).EndInit();
             ((System.ComponentModel.ISupportInitialize)numericUpDown3).EndInit();
             ((System.ComponentModel.ISupportInitialize)numericUpDown2).EndInit();
             ((System.ComponentModel.ISupportInitialize)numericUpDown1).EndInit();
@@ -1099,5 +1141,8 @@ namespace Embedded_Systems_Project
         private NumericUpDown numericUpDown1;
         private System.Windows.Forms.Timer DATABASE_TIMER;
         private ScottPlot.WinForms.FormsPlot TempPlot;
+        private Label TempLabel;
+        private Label label22;
+        private NumericUpDown TempConstantAdjuster;
     }
 }

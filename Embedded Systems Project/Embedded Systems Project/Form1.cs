@@ -19,7 +19,7 @@ namespace Embedded_Systems_Project
         private readonly string PASSWORD_NAME = "ZJx(]8djn-3@.Q/u";
         private readonly string TABLE_NAME = "temperature";
 
-        private static LiveGraphUpdater graphUpdater;
+        private static LiveGraphUpdater ?graphUpdater;
         //Read instruction bytes
         private const byte TXCHECK = 0x00;
         private const byte READ_PINA = 0x01;
@@ -125,7 +125,7 @@ namespace Embedded_Systems_Project
             }
         }
 
-
+        //Serial port Connection buttons
         /// <summary>
         /// Button event for connected to serial
         /// </summary>
@@ -169,8 +169,26 @@ namespace Embedded_Systems_Project
             }
 
         }
+        /// <summary>
+        /// Disconnect from serial
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void DisconnectButton_Click(object sender, EventArgs e)
+        {
+            serialPort.Close();
+            SerialPortStatusBulb.On = false;
 
+            DisconnectButton.Enabled = false;
+            ConnectButton.Enabled = true;
 
+            RefreshButton.Enabled = false;
+
+            EnableGaugeTimers(false);
+            LIGHT_TIMER.Enabled = false;
+        }
+
+        //Database Conection buttons
         /// <summary>
         /// Runs when the database connect button is pressed
         /// </summary>
@@ -180,10 +198,7 @@ namespace Embedded_Systems_Project
         {
             try
             {
-                string connectionString = "server=" + ServerNameSelection.SelectedItem + ";" +
-                                            "user=" + UsernameTextBox.Text + ";" +
-                                            "database=" + DatabaseTextBox.Text + ";" +
-                                            "password=" + PasswordTextBox.Text + ";";
+                string connectionString = $"server={SERVER_NAME};user={USER_NAME};database={DATABASE_NAME};password={PASSWORD_NAME};";
                 mySqlConnection = new MySqlConnection(connectionString);
 
 
@@ -200,7 +215,6 @@ namespace Embedded_Systems_Project
                 DATABASE_TIMER.Enabled = false;
             }
         }
-
         /// <summary>
         /// Runs when the database disconnect button is pressed
         /// </summary>
@@ -213,6 +227,8 @@ namespace Embedded_Systems_Project
             ServerConnectionLED.On = false;
         }
 
+
+        //Read Serial functions
         /// <summary>
         /// Reads the serialPort byte values and stores it in global variables 
         /// </summary>
@@ -233,7 +249,6 @@ namespace Embedded_Systems_Project
                 }
             }
         }
-
         /// <summary>
         /// Reads the serial port and outputs a byte array containing the data read
         /// </summary>
@@ -271,11 +286,10 @@ namespace Embedded_Systems_Project
                     break; //Break out of the loop if no bytes are found
                 }
             }
-
-
             return null;
         }
 
+        //Write serial functions
         /// <summary>
         /// Sends just and instruction byte to the serial device
         /// </summary>
@@ -288,9 +302,7 @@ namespace Embedded_Systems_Project
 
             serialPort.Write(output);
             serialPort.Write(output);
-
         }
-
         /// <summary>
         /// Sends instruction and data bytes to the serial device
         /// </summary>
@@ -307,7 +319,6 @@ namespace Embedded_Systems_Project
 
             serialPort.Write(bytes, 0, bytes.Length);
         }
-
         /// <summary>
         /// Sends a short with an instruction byte (auto converts short into bytes)
         /// </summary>
@@ -328,34 +339,6 @@ namespace Embedded_Systems_Project
             serialPort.Write(bytes, 0, bytes.Length);
         }
 
-        //Disconnect from serial
-        private void DisconnectButton_Click(object sender, EventArgs e)
-        {
-            serialPort.Close();
-            SerialPortStatusBulb.On = false;
-
-            DisconnectButton.Enabled = false;
-            ConnectButton.Enabled = true;
-
-            RefreshButton.Enabled = false;
-
-            EnableGaugeTimers(false);
-            LIGHT_TIMER.Enabled = false;
-        }
-
-        private void COM_Port_Dropdown_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            COM_Selected = true;
-
-        }
-
-        private void BaudrateSelection_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            Baud_Selected = true;
-        }
-
-
-
         /// <summary>
         /// Takes in the current binary value of the switches, 
         /// converts it to a hex value and displays it on the seven segment displays
@@ -369,17 +352,19 @@ namespace Embedded_Systems_Project
             writeSerial(SET_PORTC, (byte)PORTC, (byte)PORTC); //Write the values to the serial PORT
         }
 
+
+        /// <summary>
+        /// Sets all the values of the port to 0
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void RefreshButton_Click(object sender, EventArgs e)
         {
             //Set all the check boxes to false
-            PC0_CheckBox.Checked = false;
-            PC1_CheckBox.Checked = false;
-            PC2_CheckBox.Checked = false;
-            PC3_CheckBox.Checked = false;
-            PC4_CheckBox.Checked = false;
-            PC5_CheckBox.Checked = false;
-            PC6_CheckBox.Checked = false;
-            PC7_CheckBox.Checked = false;
+            foreach (CheckBox checkBox in new CheckBox[] { PC0_CheckBox, PC1_CheckBox, PC2_CheckBox, PC3_CheckBox, PC4_CheckBox, PC5_CheckBox, PC6_CheckBox, PC7_CheckBox })
+            {
+                checkBox.Checked = false;
+            }
 
             PORTC = 0x00; //Clear PORTC values 
 
@@ -497,10 +482,8 @@ namespace Embedded_Systems_Project
                 + DateTime.Now + "','" + data + "','" + USER_NAME + "');";
             MySqlCommand Command = new(Query, mySqlConnection);
 
-
             mySqlDataReader = Command.ExecuteReader(); //Exicute the command
             mySqlConnection.Close();
-
         }
 
         private void DATABASE_TIMER_Tick(object sender, EventArgs e)
@@ -529,9 +512,8 @@ namespace Embedded_Systems_Project
             }
         }
 
-        //
-        // Control the seven segment display
-        //
+ 
+        //Check box control
         private void PC7_CheckBox_CheckedChanged(object sender, EventArgs e)
         {
             if (PC7_CheckBox.Checked)
@@ -545,7 +527,6 @@ namespace Embedded_Systems_Project
 
             refreshSevenSeg();
         }
-
         private void PC6_CheckBox_CheckedChanged(object sender, EventArgs e)
         {
             if (PC6_CheckBox.Checked)
@@ -559,7 +540,6 @@ namespace Embedded_Systems_Project
 
             refreshSevenSeg();
         }
-
         private void PC5_CheckBox_CheckedChanged(object sender, EventArgs e)
         {
             if (PC5_CheckBox.Checked)
@@ -573,7 +553,6 @@ namespace Embedded_Systems_Project
 
             refreshSevenSeg();
         }
-
         private void PC4_CheckBox_CheckedChanged(object sender, EventArgs e)
         {
             if (PC4_CheckBox.Checked)
@@ -587,7 +566,6 @@ namespace Embedded_Systems_Project
 
             refreshSevenSeg();
         }
-
         private void PC3_CheckBox_CheckedChanged(object sender, EventArgs e)
         {
             if (PC3_CheckBox.Checked)
@@ -601,7 +579,6 @@ namespace Embedded_Systems_Project
 
             refreshSevenSeg();
         }
-
         private void PC2_CheckBox_CheckedChanged(object sender, EventArgs e)
         {
             if (PC2_CheckBox.Checked)
@@ -615,7 +592,6 @@ namespace Embedded_Systems_Project
 
             refreshSevenSeg();
         }
-
         private void PC1_CheckBox_CheckedChanged(object sender, EventArgs e)
         {
             if (PC1_CheckBox.Checked)
@@ -629,7 +605,6 @@ namespace Embedded_Systems_Project
 
             refreshSevenSeg();
         }
-
         private void PC0_CheckBox_CheckedChanged(object sender, EventArgs e)
         {
             if (PC0_CheckBox.Checked)
@@ -642,6 +617,16 @@ namespace Embedded_Systems_Project
             }
 
             refreshSevenSeg();
+        }
+
+        //Dropdown validators
+        private void COM_Port_Dropdown_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            COM_Selected = true;
+        }
+        private void BaudrateSelection_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            Baud_Selected = true;
         }
     }
 }

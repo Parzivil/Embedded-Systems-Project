@@ -35,6 +35,7 @@ namespace Embedded_Systems_Project
         private void InitializeComponent()
         {
             components = new System.ComponentModel.Container();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(BoardControlForm));
             SerialPortStatusBulb = new LedBulb();
             SerialPortBox = new GroupBox();
             SerialConnectionErrorLabel = new Label();
@@ -118,6 +119,7 @@ namespace Embedded_Systems_Project
             POT2_TIMER = new System.Windows.Forms.Timer(components);
             LIGHT_TIMER = new System.Windows.Forms.Timer(components);
             DATABASE_TIMER = new System.Windows.Forms.Timer(components);
+            DEBUG_TEXT = new Label();
             SerialPortBox.SuspendLayout();
             DatabaseGroup.SuspendLayout();
             TabController.SuspendLayout();
@@ -378,7 +380,7 @@ namespace Embedded_Systems_Project
             TabController.Location = new Point(12, 12);
             TabController.Name = "TabController";
             TabController.SelectedIndex = 0;
-            TabController.Size = new Size(541, 666);
+            TabController.Size = new Size(541, 646);
             TabController.TabIndex = 2;
             TabController.Selecting += TabController_Selecting;
             // 
@@ -389,7 +391,7 @@ namespace Embedded_Systems_Project
             SetupTabPage.Location = new Point(4, 24);
             SetupTabPage.Name = "SetupTabPage";
             SetupTabPage.Padding = new Padding(3);
-            SetupTabPage.Size = new Size(533, 638);
+            SetupTabPage.Size = new Size(533, 618);
             SetupTabPage.TabIndex = 0;
             SetupTabPage.Text = "Setup";
             SetupTabPage.UseVisualStyleBackColor = true;
@@ -428,7 +430,7 @@ namespace Embedded_Systems_Project
             DigitalPage.Location = new Point(4, 24);
             DigitalPage.Name = "DigitalPage";
             DigitalPage.Padding = new Padding(3);
-            DigitalPage.Size = new Size(533, 638);
+            DigitalPage.Size = new Size(533, 618);
             DigitalPage.TabIndex = 1;
             DigitalPage.Text = "Digital I/O";
             DigitalPage.UseVisualStyleBackColor = true;
@@ -739,7 +741,7 @@ namespace Embedded_Systems_Project
             PortLightsPage.Location = new Point(4, 24);
             PortLightsPage.Name = "PortLightsPage";
             PortLightsPage.Padding = new Padding(3);
-            PortLightsPage.Size = new Size(533, 638);
+            PortLightsPage.Size = new Size(533, 618);
             PortLightsPage.TabIndex = 2;
             PortLightsPage.Text = "Ports-Lights";
             PortLightsPage.UseVisualStyleBackColor = true;
@@ -774,6 +776,7 @@ namespace Embedded_Systems_Project
             LightScrollBar.Size = new Size(39, 201);
             LightScrollBar.TabIndex = 4;
             LightScrollBar.Value = 100;
+            LightScrollBar.Scroll += LightScrollBar_Scroll;
             // 
             // LIGHT_LABEL
             // 
@@ -885,7 +888,7 @@ namespace Embedded_Systems_Project
             TempPage.Location = new Point(4, 24);
             TempPage.Name = "TempPage";
             TempPage.Padding = new Padding(3);
-            TempPage.Size = new Size(533, 638);
+            TempPage.Size = new Size(533, 618);
             TempPage.TabIndex = 3;
             TempPage.Text = "Temp Control";
             TempPage.UseVisualStyleBackColor = true;
@@ -1018,16 +1021,27 @@ namespace Embedded_Systems_Project
             DATABASE_TIMER.Tag = "TempPage";
             DATABASE_TIMER.Tick += DATABASE_TIMER_Tick;
             // 
+            // DEBUG_TEXT
+            // 
+            DEBUG_TEXT.AutoSize = true;
+            DEBUG_TEXT.Location = new Point(16, 661);
+            DEBUG_TEXT.Name = "DEBUG_TEXT";
+            DEBUG_TEXT.Size = new Size(44, 15);
+            DEBUG_TEXT.TabIndex = 3;
+            DEBUG_TEXT.Text = "label23";
+            // 
             // BoardControlForm
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(558, 681);
+            Controls.Add(DEBUG_TEXT);
             Controls.Add(TabController);
+            Icon = (Icon)resources.GetObject("$this.Icon");
             MaximizeBox = false;
             MinimizeBox = false;
             Name = "BoardControlForm";
-            Text = "AUT Application Board Control";
+            Text = "AUT Application Board Control - Robin Nowlan";
             SerialPortBox.ResumeLayout(false);
             SerialPortBox.PerformLayout();
             DatabaseGroup.ResumeLayout(false);
@@ -1048,6 +1062,7 @@ namespace Embedded_Systems_Project
             ((System.ComponentModel.ISupportInitialize)numericUpDown2).EndInit();
             ((System.ComponentModel.ISupportInitialize)numericUpDown1).EndInit();
             ResumeLayout(false);
+            PerformLayout();
         }
 
         #endregion
@@ -1144,5 +1159,6 @@ namespace Embedded_Systems_Project
         private Label TempLabel;
         private Label label22;
         private NumericUpDown TempConstantAdjuster;
+        private Label DEBUG_TEXT;
     }
 }

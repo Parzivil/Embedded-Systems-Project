@@ -19,7 +19,7 @@ namespace Embedded_Systems_Project
         private readonly string PASSWORD_NAME = "ZJx(]8djn-3@.Q/u";
         private readonly string TABLE_NAME = "temperature";
 
-        private static LiveGraphUpdater ?graphUpdater;
+        private static LiveGraphUpdater? graphUpdater;
         //Read instruction bytes
         private const byte TXCHECK = 0x00;
         private const byte READ_PINA = 0x01;
@@ -242,11 +242,14 @@ namespace Embedded_Systems_Project
                     instructionByte = bytes[1];
                     firstByte = bytes[2];
                     secondByte = bytes[3];
+                    DEBUG_TEXT.Text = "RX PACKAGE: " + BitConverter.ToString(new byte[] { START_BYTE, instructionByte, firstByte, secondByte, STOP_BYTE });
                 }
                 else if (bytes.Length >= 3)
                 {
                     instructionByte = bytes[1];
                 }
+
+
             }
         }
         /// <summary>
@@ -444,6 +447,22 @@ namespace Embedded_Systems_Project
             }
         }
 
+        private void LightScrollBar_Scroll(object sender, ScrollEventArgs e)
+        {
+            int percentage = 100 - LightScrollBar.Value;
+            if (percentage >= 0)
+            {
+                ushort value = (ushort)(percentage * 0xFFFF / 100);
+                writeSerial(SET_LIGHT, value);
+                ReadSerial(); //Clear the read buffer of the confirmation code
+                LightPercentageLabel.Text = percentage.ToString() + "%" + " DEBUG: " + value.ToString("X") + "\n" + BitConverter.ToString(new byte[] { START_BYTE, instructionByte, firstByte, secondByte, STOP_BYTE });
+            }
+            else
+            {
+                LightScrollBar.Value = 0;
+            }
+        }
+
         private void LIGHT_TIMER_Tick(object sender, EventArgs e)
         {
             writeSerial(READ_LIGHT);
@@ -455,18 +474,7 @@ namespace Embedded_Systems_Project
                 LightGauge.Value = val;
             }
 
-            int percentage = 100 - LightScrollBar.Value;
-            if (percentage >= 0)
-            {
-                ushort value = (ushort)(percentage * 0xFFFF / 100);
-                LightPercentageLabel.Text = percentage.ToString() + "%" + " DEBUG: " + value;
-                writeSerial(SET_LIGHT, value);
-                ReadSerial(); //Clear the read buffer of the confirmation code
-            }
-            else
-            {
-                LightScrollBar.Value = 0;
-            }
+
         }
 
 
@@ -476,7 +484,6 @@ namespace Embedded_Systems_Project
         /// <param name="data"></param>
         private void SendToDatabase(float data)
         {
-
             mySqlConnection.Open();
             string Query = "insert into " + DATABASE_NAME + "." + TABLE_NAME + "(timeStamp,temperature,remark) values('"
                 + DateTime.Now + "','" + data + "','" + USER_NAME + "');";
@@ -484,6 +491,7 @@ namespace Embedded_Systems_Project
 
             mySqlDataReader = Command.ExecuteReader(); //Exicute the command
             mySqlConnection.Close();
+
         }
 
         private void DATABASE_TIMER_Tick(object sender, EventArgs e)
@@ -512,7 +520,7 @@ namespace Embedded_Systems_Project
             }
         }
 
- 
+
         //Check box control
         private void PC7_CheckBox_CheckedChanged(object sender, EventArgs e)
         {

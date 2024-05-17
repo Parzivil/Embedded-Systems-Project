@@ -86,13 +86,7 @@ void Setup(){
 	
 	DDRA = 0x00; //Set PORTA as input
 	DDRC = 0xFF; //Set PORTC as output
-	DDRB = 0b11100000;
-	
-	/*
-	//Setup OCR 
-	TCCR1A = 0b10100010; //Enable OCR1-ABC
-	TCCR1B = 0b00011010; //8x pre-scaler default PWM mode
-	ICR1 = PWM_FREQUENCY; //Set ICR to 20khz (50us)	*/		TCCR1A = 0b10101010; //Fast PWM CTC	TCCR1B = 0b00011001; //Fast PWM, 8 prescaler	ICR1 = 399; //20khz
+	DDRB = 0b11100000;		TCCR1A = 0b10101010; //Fast PWM CTC	TCCR1B = 0b00011010; //Fast PWM, 8 prescaler	ICR1 = 399; //20khz
 	
 	//Setup the ADC 
 	ADMUX = 0b11100000;
@@ -152,22 +146,22 @@ void Set(unsigned char INS){
 		
 		//Set Heater PWM to inputed data
 		case SET_HEATER:
-			OCR1CH = MSB;
-			OCR1CL = LSB;
+			OCR1CH = LSB;
+			OCR1CL = MSB;
 			Transmit_Short(SET_HEATER, OCR1C); //Send back instruction to confirm
 		break;
 		
 		//Set Light PWM to inputed data
 		case SET_LIGHT:
-			OCR1BH = MSB;
-			OCR1BL = LSB;
+			OCR1BH = LSB;
+			OCR1BL = MSB;
 			Transmit_Short(SET_LIGHT, OCR1B); //Send back instruction to confirm
 		break;
 		
 		//Set Motor PWM to inputed data
 		case SET_MOTOR:
-			OCR1AH = MSB;
-			OCR1AL = LSB;
+			OCR1AH = LSB;
+			OCR1AL = MSB;
 			Transmit_Short(SET_MOTOR, OCR1A); //Send back instruction to confirm
 		break;
 	}

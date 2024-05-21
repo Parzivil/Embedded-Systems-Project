@@ -2,56 +2,26 @@ using Embedded_Systems_Project.Addons;
 using MySql.Data.MySqlClient;
 using System.IO.Ports;
 
+
 namespace Embedded_Systems_Project
 {
     public partial class BoardControlForm : Form
     {
-        /// <summary>
-        /// Database Connection
-        /// </summary>
-        private MySqlConnection mySqlConnection;
-        private MySqlDataReader mySqlDataReader;
-
-        //Database Credentials
-        private readonly string SERVER_NAME = "127.0.0.1";
-        private readonly string USER_NAME = "ST123456";
-        private readonly string DATABASE_NAME = "temperature_record";
-        private readonly string PASSWORD_NAME = "ZJx(]8djn-3@.Q/u";
-        private readonly string TABLE_NAME = "temperature";
+        Database myDatabase = new(); //Responsible for controlling the database
+        SerialController serialController = new(); //Responsible for controlling the 
 
         private static LiveGraphUpdater? graphUpdater;
-        //Read instruction bytes
-        private const byte TXCHECK = 0x00;
-        private const byte READ_PINA = 0x01;
-        private const byte READ_POT1 = 0x02;
-        private const byte READ_POT2 = 0x03;
-        private const byte READ_TEMP = 0x04;
-        private const byte READ_LIGHT = 0x05;
-
-        //Write instruction bytes
-        private const byte SET_PORTC = 0x0A;
-        private const byte SET_HEATER = 0x0B;
-        private const byte SET_LIGHT = 0x0C;
-        private const byte SET_MOTOR = 0x0D;
-
-        //Start and stop instruction bytes
-        private const byte START_BYTE = 0x53;
-        private const byte STOP_BYTE = 0xAA;
-
-        private float TEMP_CONST = 26;
-
-        //byte variables to store the incoming bytes
-        private static byte instructionByte, firstByte, secondByte;
-        private static SerialPort serialPort = new(); //Create a new serial port
 
         private bool COM_Selected = false;
         private bool Baud_Selected = false;
         private readonly bool SerialConnected = false;
 
+
         private int PORTC = 0x00;
         private readonly char[] SevenSegDisplayChars = new char[2];
 
         private readonly LedBulb[] PORTA_lights;
+        public const ushort PWM_MAX = 0x0190; //This may need to be 399
 
         /// <summary>
         /// Constructor for BoardControlForm Class
@@ -60,21 +30,20 @@ namespace Embedded_Systems_Project
         {
             InitializeComponent();
 
-            _ = ServerNameSelection.Items.Add(SERVER_NAME);
-            ServerNameSelection.Text = SERVER_NAME;
-            UsernameTextBox.Text = USER_NAME;
-            PasswordTextBox.Text = PASSWORD_NAME;
-            DatabaseTextBox.Text = DATABASE_NAME;
+            _ = ServerNameSelection.Items.Add(myDatabase.SERVER_NAME);
+            ServerNameSelection.Text = myDatabase.SERVER_NAME;
+            UsernameTextBox.Text = myDatabase.USER_NAME;
+            PasswordTextBox.Text = myDatabase.PASSWORD_NAME;
+            DatabaseTextBox.Text = myDatabase.DATABASE_NAME;
 
             TempPlot.Interaction.Disable(); //Prevent interaction with the plot chart
 
             PORTA_lights = new LedBulb[8] { PA0, PA1, PA2, PA3, PA4, PA5, PA6, PA7 };
 
-            string[] portNames = SerialPort.GetPortNames(); //Grab available ports
-
             int[] baudrates = { 4800, 9600, 19200, 38400, 57600, 115200, 230400, 460800, 921600 };
 
-            foreach (string portName in portNames)
+            //Grab available ports
+            foreach (string portName in serialController.portNames)
             {
                 _ = COM_Port_Dropdown.Items.Add(portName); //Add ports to list
             }
@@ -141,17 +110,17 @@ namespace Embedded_Systems_Project
                 try
                 {
                     //Set a new serial port
-                    serialPort = new SerialPort(COM_Port_Dropdown.SelectedItem.ToString(),
+                    serialController.serialPort = new SerialPort(COM_Port_Dropdown.SelectedItem.ToString(),
                                             int.Parse(BaudrateSelection.SelectedItem.ToString()));
 
-                    serialPort.Open(); //Open the serial port
+                    serialController.serialPort.Open(); //Open the serial port
 
                     DisconnectButton.Enabled = true; //Enable the disconnect button
                     ConnectButton.Enabled = false; //Disable the connect button
 
                     RefreshButton.Enabled = true; //Enable the refresh button
 
-                    if (serialPort.IsOpen)
+                    if (serialController.serialPort.IsOpen)
                     {
                         SerialPortStatusBulb.On = true; //Turn connection status bulb on
                     }
@@ -176,7 +145,7 @@ namespace Embedded_Systems_Project
         /// <param name="e"></param>
         private void DisconnectButton_Click(object sender, EventArgs e)
         {
-            serialPort.Close();
+            serialController.serialPort.Close();
             SerialPortStatusBulb.On = false;
 
             DisconnectButton.Enabled = false;
@@ -198,13 +167,13 @@ namespace Embedded_Systems_Project
         {
             try
             {
-                string connectionString = $"server={SERVER_NAME};user={USER_NAME};database={DATABASE_NAME};password={PASSWORD_NAME};";
-                mySqlConnection = new MySqlConnection(connectionString);
+
+                myDatabase.mySqlConnection = new MySqlConnection(myDatabase.connectionString);
 
 
                 ServerConnectionLED.On = true;
 
-                if (serialPort.IsOpen)
+                if (serialController.serialPort.IsOpen)
                 {
                     DATABASE_TIMER.Enabled = true;
                 }
@@ -222,125 +191,12 @@ namespace Embedded_Systems_Project
         /// <param name="e"></param>
         private void DatabaseDisconnectButton_Click(object sender, EventArgs e)
         {
-            mySqlConnection.Close();
+            myDatabase.mySqlConnection.Close();
             DATABASE_TIMER.Enabled = false;
+
             ServerConnectionLED.On = false;
         }
 
-
-        //Read Serial functions
-        /// <summary>
-        /// Reads the serialPort byte values and stores it in global variables 
-        /// </summary>
-        private void ReadSerial()
-        {
-            byte[] bytes = ReadSerialPackage();
-            if (bytes != null)
-            {
-                if (bytes.Length > 4)
-                {
-                    instructionByte = bytes[1];
-                    firstByte = bytes[2];
-                    secondByte = bytes[3];
-                    DEBUG_TEXT.Text = "RX PACKAGE: " + BitConverter.ToString(new byte[] { START_BYTE, instructionByte, firstByte, secondByte, STOP_BYTE });
-                }
-                else if (bytes.Length >= 3)
-                {
-                    instructionByte = bytes[1];
-                }
-
-
-            }
-        }
-        /// <summary>
-        /// Reads the serial port and outputs a byte array containing the data read
-        /// </summary>
-        /// <returns>returns a byte array containing the data from the serial port</returns>
-        private byte[]? ReadSerialPackage()
-        {
-            List<byte> packageBytes = new(); //List to store bytes
-            bool packageStartFound = false; //Boolen to store if the first byte is found
-
-            //Consistantly reads the serial port for bytes
-            for (int i = 0; i < 5; i++)
-            {
-                if (serialPort.BytesToRead > 0)
-                {
-                    byte currentByte = (byte)serialPort.ReadByte();
-
-                    if (!packageStartFound && currentByte == START_BYTE)
-                    {
-                        packageStartFound = true;
-                        packageBytes.Add(currentByte);
-                    }
-
-                    else if (packageStartFound)
-                    {
-                        packageBytes.Add(currentByte);
-                        if (currentByte == STOP_BYTE)
-                        {
-                            return packageBytes.ToArray();
-                        }
-                    }
-                }
-
-                else
-                {
-                    break; //Break out of the loop if no bytes are found
-                }
-            }
-            return null;
-        }
-
-        //Write serial functions
-        /// <summary>
-        /// Sends just and instruction byte to the serial device
-        /// </summary>
-        /// <param name="instruction"></param>
-        public static void writeSerial(byte instruction)
-        {
-
-            byte[] bytes = { START_BYTE, instruction, STOP_BYTE };
-            string output = System.Text.Encoding.Default.GetString(bytes);
-
-            serialPort.Write(output);
-            serialPort.Write(output);
-        }
-        /// <summary>
-        /// Sends instruction and data bytes to the serial device
-        /// </summary>
-        /// <param name="instruction"></param>
-        /// <param name="firstByte"></param>
-        /// <param name="secondByte"></param>
-        public static void writeSerial(byte instruction, byte firstByte, byte secondByte)
-        {
-            byte[] bytes = {START_BYTE , //Send the start byte
-                            instruction , //Send the instruction
-                            firstByte , //Send the first byte
-                            secondByte , //Send the second byte
-                            STOP_BYTE };
-
-            serialPort.Write(bytes, 0, bytes.Length);
-        }
-        /// <summary>
-        /// Sends a short with an instruction byte (auto converts short into bytes)
-        /// </summary>
-        /// <param name="instruction"></param>
-        /// <param name="val"></param>
-        public static void writeSerial(byte instruction, ushort val)
-        {
-            byte[] bytes = {START_BYTE , //Send the start byte
-                            instruction , //Send the instruction
-                            (byte)(val & 0xff), //Send the first byte
-                            (byte)((val >> 8) & 0xff) , //Send the second byte
-                            STOP_BYTE };
-
-
-            //string output = System.Text.Encoding.Default.GetString(bytes);
-            //serialPort.WriteLine(output);
-
-            serialPort.Write(bytes, 0, bytes.Length);
-        }
 
         /// <summary>
         /// Takes in the current binary value of the switches, 
@@ -352,7 +208,7 @@ namespace Embedded_Systems_Project
             sevenSeg_1.Value = portC_hex[^2].ToString(); //Set the first character
             sevenSeg_2.Value = portC_hex[^1].ToString(); //Set the second character
 
-            writeSerial(SET_PORTC, (byte)PORTC, (byte)PORTC); //Write the values to the serial PORT
+            serialController.writeSerial(serialController.SET_PORTC, (byte)PORTC, (byte)PORTC); //Write the values to the serial PORT
         }
 
 
@@ -413,36 +269,37 @@ namespace Embedded_Systems_Project
 
         private void PORTC_LIGHTS_TIMER_Tick(object sender, EventArgs e)
         {
-            writeSerial(READ_PINA);
-            ReadSerial();
+            serialController.writeSerial(serialController.READ_PINA);
+            serialController.ReadSerial();
 
-            if (instructionByte == READ_PINA)
+
+            if (serialController.getInstruction() == serialController.READ_PINA)
             {
-                Set_PORTA_Lights((char)secondByte);
+                Set_PORTA_Lights((char)serialController.getSecondByte());
             }
 
         }
 
         private void POT1_TIMER_Tick(object sender, EventArgs e)
         {
-            writeSerial(READ_POT1);
-            ReadSerial();
+            serialController.writeSerial(serialController.READ_POT1);
+            serialController.ReadSerial();
 
-            if (instructionByte == READ_POT1)
+            if (serialController.getInstruction() == serialController.READ_POT1)
             {
-                float val = (secondByte << 8) | firstByte;
+                float val = (serialController.getSecondByte() << 8) | serialController.getSecondByte();
                 PotGauge1.Value = val / (0xFFFF / PotGauge2.MaxValue);
             }
         }
 
         private void POT2_TIMER_Tick(object sender, EventArgs e)
         {
-            writeSerial(READ_POT2);
-            ReadSerial();
+            serialController.writeSerial(serialController.READ_POT2);
+            serialController.ReadSerial();
 
-            if (instructionByte == READ_POT2)
+            if (serialController.getInstruction() == serialController.READ_POT2)
             {
-                float val = (secondByte << 8) | firstByte;
+                float val = (serialController.getSecondByte() << 8) | serialController.getSecondByte();
                 PotGauge2.Value = val / (0xFFFF / PotGauge2.MaxValue);
             }
         }
@@ -452,10 +309,11 @@ namespace Embedded_Systems_Project
             int percentage = 100 - LightScrollBar.Value;
             if (percentage >= 0)
             {
-                ushort value = (ushort)(percentage * 0xFFFF / 100);
-                writeSerial(SET_LIGHT, value);
-                ReadSerial(); //Clear the read buffer of the confirmation code
-                LightPercentageLabel.Text = percentage.ToString() + "%" + " DEBUG: " + value.ToString("X") + "\n" + BitConverter.ToString(new byte[] { START_BYTE, instructionByte, firstByte, secondByte, STOP_BYTE });
+                ushort value = (ushort)(percentage * PWM_MAX / 100);
+                serialController.writeSerial(serialController.SET_LIGHT, value);
+                serialController.ReadSerial(); //Clear the read buffer of the confirmation code
+
+                LightPercentageLabel.Text = percentage.ToString() + "%" + " DEBUG: " + value.ToString("X") + "\n" + BitConverter.ToString(new byte[] { serialController.START_BYTE, serialController.getInstruction(), serialController.getFirstByte(), serialController.getSecondByte(), serialController.STOP_BYTE });
             }
             else
             {
@@ -465,53 +323,34 @@ namespace Embedded_Systems_Project
 
         private void LIGHT_TIMER_Tick(object sender, EventArgs e)
         {
-            writeSerial(READ_LIGHT);
-            ReadSerial();
+            serialController.writeSerial(serialController.READ_LIGHT);
+            serialController.ReadSerial();
 
-            if (instructionByte == READ_LIGHT)
+            if (serialController.getInstruction() == serialController.READ_LIGHT)
             {
-                float val = ((secondByte << 8) | firstByte) / 0xFF;
+                float val = serialController.getData();
                 LightGauge.Value = val;
             }
 
 
         }
 
-
-        /// <summary>
-        /// Sends data to the set database
-        /// </summary>
-        /// <param name="data"></param>
-        private void SendToDatabase(float data)
-        {
-            mySqlConnection.Open();
-            string Query = "insert into " + DATABASE_NAME + "." + TABLE_NAME + "(timeStamp,temperature,remark) values('"
-                + DateTime.Now + "','" + data + "','" + USER_NAME + "');";
-            MySqlCommand Command = new(Query, mySqlConnection);
-
-            mySqlDataReader = Command.ExecuteReader(); //Exicute the command
-            mySqlConnection.Close();
-
-        }
-
         private void DATABASE_TIMER_Tick(object sender, EventArgs e)
         {
-            writeSerial(READ_TEMP);
-            ReadSerial();
+            serialController.writeSerial(serialController.READ_TEMP);
 
-            if (instructionByte == READ_TEMP)
+            serialController.ReadSerial();
+
+            if (serialController.getInstruction() == serialController.READ_TEMP)
             {
-                TEMP_CONST = (float)TempConstantAdjuster.Value;
-                char temp = (char)((firstByte << 8) + secondByte);
+                serialController.TEMP_CONST = (float)TempConstantAdjuster.Value;
+                char temp = serialController.getData();
 
-                writeSerial(TXCHECK);
-                ReadSerial();
-
-                double tempF = temp * TEMP_CONST / 0xFFFF;
+                double tempF = temp * serialController.TEMP_CONST / 0xFFFF;
 
 
                 graphUpdater.Update(tempF); //Plot the temp
-                SendToDatabase((float)Math.Round(tempF, 2)); //Send the data to the database
+                myDatabase.SendToDatabase((float)Math.Round(tempF, 2)); //Send the data to the database
 
                 TempLabel.Text = tempF.ToString();
 
@@ -519,6 +358,7 @@ namespace Embedded_Systems_Project
                 Update();
             }
         }
+
 
 
         //Check box control

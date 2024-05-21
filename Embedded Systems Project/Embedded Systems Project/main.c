@@ -146,22 +146,22 @@ void Set(unsigned char INS){
 		
 		//Set Heater PWM to inputed data
 		case SET_HEATER:
-			OCR1CH = LSB;
-			OCR1CL = MSB;
+			OCR1CH = MSB;
+			OCR1CL = LSB;
 			Transmit_Short(SET_HEATER, OCR1C); //Send back instruction to confirm
 		break;
 		
 		//Set Light PWM to inputed data
 		case SET_LIGHT:
-			OCR1BH = LSB;
-			OCR1BL = MSB;
+			OCR1BH = MSB;
+			OCR1BL = LSB;
 			Transmit_Short(SET_LIGHT, OCR1B); //Send back instruction to confirm
 		break;
 		
 		//Set Motor PWM to inputed data
 		case SET_MOTOR:
-			OCR1AH = LSB;
-			OCR1AL = MSB;
+			OCR1AH = MSB;
+			OCR1AL = LSB;
 			Transmit_Short(SET_MOTOR, OCR1A); //Send back instruction to confirm
 		break;
 	}

@@ -9,6 +9,7 @@ namespace Embedded_Systems_Project
     {
         Database myDatabase = new(); //Responsible for controlling the database
         SerialController serialController = new(); //Responsible for controlling the 
+        PI_Controller pi = new(0, 0);
 
         private static LiveGraphUpdater? graphUpdater;
 
@@ -36,8 +37,6 @@ namespace Embedded_Systems_Project
             PasswordTextBox.Text = myDatabase.PASSWORD_NAME;
             DatabaseTextBox.Text = myDatabase.DATABASE_NAME;
 
-            TempPlot.Interaction.Disable(); //Prevent interaction with the plot chart
-
             PORTA_lights = new LedBulb[8] { PA0, PA1, PA2, PA3, PA4, PA5, PA6, PA7 };
 
             int[] baudrates = { 4800, 9600, 19200, 38400, 57600, 115200, 230400, 460800, 921600 };
@@ -56,8 +55,6 @@ namespace Embedded_Systems_Project
             BaudrateSelection.Text = baudrates[3].ToString();
 
             graphUpdater = new LiveGraphUpdater(TempPlot);
-            graphUpdater.StartUpdating(new double[0]);
-
         }
 
         /// <summary>
@@ -120,6 +117,8 @@ namespace Embedded_Systems_Project
 
                     RefreshButton.Enabled = true; //Enable the refresh button
 
+                    TEMP_TIMER.Enabled = true;
+
                     if (serialController.serialPort.IsOpen)
                     {
                         SerialPortStatusBulb.On = true; //Turn connection status bulb on
@@ -155,6 +154,8 @@ namespace Embedded_Systems_Project
 
             EnableGaugeTimers(false);
             LIGHT_TIMER.Enabled = false;
+
+            TEMP_TIMER.Enabled = false;
         }
 
         //Database Conection buttons
@@ -167,8 +168,6 @@ namespace Embedded_Systems_Project
         {
             try
             {
-
-                myDatabase.mySqlConnection = new MySqlConnection(myDatabase.connectionString);
 
 
                 ServerConnectionLED.On = true;
@@ -273,9 +272,9 @@ namespace Embedded_Systems_Project
             serialController.ReadSerial();
 
 
-            if (serialController.getInstruction() == serialController.READ_PINA)
+            if (serialController.Instruction == serialController.READ_PINA)
             {
-                Set_PORTA_Lights((char)serialController.getSecondByte());
+                Set_PORTA_Lights((char)serialController.SecondByte);
             }
 
         }
@@ -285,9 +284,9 @@ namespace Embedded_Systems_Project
             serialController.writeSerial(serialController.READ_POT1);
             serialController.ReadSerial();
 
-            if (serialController.getInstruction() == serialController.READ_POT1)
+            if (serialController.Instruction == serialController.READ_POT1)
             {
-                float val = (serialController.getSecondByte() << 8) | serialController.getSecondByte();
+                float val = (serialController.SecondByte << 8) | serialController.SecondByte;
                 PotGauge1.Value = val / (0xFFFF / PotGauge2.MaxValue);
             }
         }
@@ -297,9 +296,9 @@ namespace Embedded_Systems_Project
             serialController.writeSerial(serialController.READ_POT2);
             serialController.ReadSerial();
 
-            if (serialController.getInstruction() == serialController.READ_POT2)
+            if (serialController.Instruction == serialController.READ_POT2)
             {
-                float val = (serialController.getSecondByte() << 8) | serialController.getSecondByte();
+                float val = (serialController.SecondByte << 8) | serialController.SecondByte;
                 PotGauge2.Value = val / (0xFFFF / PotGauge2.MaxValue);
             }
         }
@@ -313,7 +312,7 @@ namespace Embedded_Systems_Project
                 serialController.writeSerial(serialController.SET_LIGHT, value);
                 serialController.ReadSerial(); //Clear the read buffer of the confirmation code
 
-                LightPercentageLabel.Text = percentage.ToString() + "%" + " DEBUG: " + value.ToString("X") + "\n" + BitConverter.ToString(new byte[] { serialController.START_BYTE, serialController.getInstruction(), serialController.getFirstByte(), serialController.getSecondByte(), serialController.STOP_BYTE });
+                LightPercentageLabel.Text = percentage.ToString() + "%" + " DEBUG: " + value.ToString("X") + "\n" + BitConverter.ToString(new byte[] { serialController.START_BYTE, serialController.Instruction, serialController.FirstByte, serialController.SecondByte, serialController.STOP_BYTE });
             }
             else
             {
@@ -326,7 +325,7 @@ namespace Embedded_Systems_Project
             serialController.writeSerial(serialController.READ_LIGHT);
             serialController.ReadSerial();
 
-            if (serialController.getInstruction() == serialController.READ_LIGHT)
+            if (serialController.Instruction == serialController.READ_LIGHT)
             {
                 float val = serialController.getData();
                 LightGauge.Value = val;
@@ -341,21 +340,70 @@ namespace Embedded_Systems_Project
 
             serialController.ReadSerial();
 
-            if (serialController.getInstruction() == serialController.READ_TEMP)
+            if (serialController.Instruction == serialController.READ_TEMP)
             {
-                serialController.TEMP_CONST = (float)TempConstantAdjuster.Value;
+
+                char temp = serialController.getData();
+
+                double tempF = temp * serialController.TEMP_CONST / 0xFFFF;
+
+                //myDatabase.SendToDatabase((float)Math.Round(tempF, 2)); //Send the data to the database
+
+
+
+                Invalidate();
+                Update();
+            }
+        }
+
+        private void TEMP_TIMER_Tick(object sender, EventArgs e)
+        {
+
+            pi.IGain = (double)KiSet.Value;
+            pi.PGain = (double)KpSet.Value;
+            pi.targetVal = (double)SetPointTemp.Value;
+
+
+            serialController.writeSerial(serialController.READ_TEMP);
+            serialController.ReadSerial();
+
+            if (serialController.Instruction == serialController.READ_TEMP && serialController.getData() < 150)
+            {
+
                 char temp = serialController.getData();
 
                 double tempF = temp * serialController.TEMP_CONST / 0xFFFF;
 
 
-                graphUpdater.Update(tempF); //Plot the temp
-                myDatabase.SendToDatabase((float)Math.Round(tempF, 2)); //Send the data to the database
+                graphUpdater.Update(tempF, pi.targetVal); //Plot the temp
 
                 TempLabel.Text = tempF.ToString();
 
-                Invalidate();
-                Update();
+                double PI_val = pi.Compute(tempF);
+
+
+                if (PI_val > 0)
+                {
+                    //Turn fan off
+                    serialController.writeSerial(serialController.SET_MOTOR, 0);
+                    serialController.ReadSerial();
+
+                    //Config heater
+                    serialController.writeSerial(serialController.SET_HEATER, (ushort)PI_val);
+                    serialController.ReadSerial();
+                }
+                else if(PI_val < 0)
+                {
+                    //Turn heater off
+                    serialController.writeSerial(serialController.SET_HEATER, 0);
+                    serialController.ReadSerial();
+
+                    //Config fan
+                    serialController.writeSerial(serialController.SET_MOTOR, (ushort)PI_val);
+                    serialController.ReadSerial();
+                }
+                
+
             }
         }
 
@@ -476,5 +524,7 @@ namespace Embedded_Systems_Project
         {
             Baud_Selected = true;
         }
+
+
     }
 }

@@ -35,6 +35,11 @@ namespace Embedded_Systems_Project
         private void InitializeComponent()
         {
             components = new System.ComponentModel.Container();
+            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea1 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
+            System.Windows.Forms.DataVisualization.Charting.Series series1 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataVisualization.Charting.Series series2 = new System.Windows.Forms.DataVisualization.Charting.Series();
+            System.Windows.Forms.DataVisualization.Charting.Title title1 = new System.Windows.Forms.DataVisualization.Charting.Title();
+            System.Windows.Forms.DataVisualization.Charting.Title title2 = new System.Windows.Forms.DataVisualization.Charting.Title();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(BoardControlForm));
             SerialPortStatusBulb = new LedBulb();
             SerialPortBox = new GroupBox();
@@ -103,23 +108,32 @@ namespace Embedded_Systems_Project
             PotGauge2 = new AquaGauge();
             PotGauge1 = new AquaGauge();
             TempPage = new TabPage();
-            label22 = new Label();
-            TempConstantAdjuster = new NumericUpDown();
+            label25 = new Label();
             TempLabel = new Label();
-            TempPlot = new ScottPlot.WinForms.FormsPlot();
+            label23 = new Label();
+            groupBox2 = new GroupBox();
+            groupBox4 = new GroupBox();
+            dataLoggingStateLabel = new Label();
+            disableLoggingButton = new Button();
+            EnableLoggingButton = new Button();
+            groupBox3 = new GroupBox();
+            numericUpDown4 = new NumericUpDown();
+            InsertIntoTableButton = new Button();
+            label22 = new Label();
+            TempPlot = new System.Windows.Forms.DataVisualization.Charting.Chart();
             label21 = new Label();
             label20 = new Label();
             label19 = new Label();
             label18 = new Label();
-            numericUpDown3 = new NumericUpDown();
-            numericUpDown2 = new NumericUpDown();
-            numericUpDown1 = new NumericUpDown();
+            KiSet = new NumericUpDown();
+            KpSet = new NumericUpDown();
+            SetPointTemp = new NumericUpDown();
             PORTC_LIGHTS_TIMER = new System.Windows.Forms.Timer(components);
             POT1_TIMER = new System.Windows.Forms.Timer(components);
             POT2_TIMER = new System.Windows.Forms.Timer(components);
             LIGHT_TIMER = new System.Windows.Forms.Timer(components);
             DATABASE_TIMER = new System.Windows.Forms.Timer(components);
-            DEBUG_TEXT = new Label();
+            TEMP_TIMER = new System.Windows.Forms.Timer(components);
             SerialPortBox.SuspendLayout();
             DatabaseGroup.SuspendLayout();
             TabController.SuspendLayout();
@@ -129,10 +143,14 @@ namespace Embedded_Systems_Project
             groupBox1.SuspendLayout();
             PotsGroup.SuspendLayout();
             TempPage.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)TempConstantAdjuster).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)numericUpDown3).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)numericUpDown2).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)numericUpDown1).BeginInit();
+            groupBox2.SuspendLayout();
+            groupBox4.SuspendLayout();
+            groupBox3.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)numericUpDown4).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)TempPlot).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)KiSet).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)KpSet).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)SetPointTemp).BeginInit();
             SuspendLayout();
             // 
             // SerialPortStatusBulb
@@ -258,7 +276,7 @@ namespace Embedded_Systems_Project
             DatabaseGroup.Controls.Add(label1);
             DatabaseGroup.Location = new Point(40, 266);
             DatabaseGroup.Name = "DatabaseGroup";
-            DatabaseGroup.Size = new Size(437, 355);
+            DatabaseGroup.Size = new Size(437, 300);
             DatabaseGroup.TabIndex = 1;
             DatabaseGroup.TabStop = false;
             DatabaseGroup.Text = "Database Server Connection";
@@ -267,7 +285,7 @@ namespace Embedded_Systems_Project
             // 
             label7.AutoSize = true;
             label7.Font = new Font("Segoe UI", 9F, FontStyle.Bold, GraphicsUnit.Point);
-            label7.Location = new Point(28, 292);
+            label7.Location = new Point(28, 262);
             label7.Name = "label7";
             label7.Size = new Size(123, 15);
             label7.TabIndex = 8;
@@ -275,7 +293,7 @@ namespace Embedded_Systems_Project
             // 
             // ServerConnectionLED
             // 
-            ServerConnectionLED.Location = new Point(187, 287);
+            ServerConnectionLED.Location = new Point(187, 257);
             ServerConnectionLED.Name = "ServerConnectionLED";
             ServerConnectionLED.On = false;
             ServerConnectionLED.Size = new Size(20, 20);
@@ -380,7 +398,7 @@ namespace Embedded_Systems_Project
             TabController.Location = new Point(12, 12);
             TabController.Name = "TabController";
             TabController.SelectedIndex = 0;
-            TabController.Size = new Size(541, 646);
+            TabController.Size = new Size(541, 601);
             TabController.TabIndex = 2;
             TabController.Selecting += TabController_Selecting;
             // 
@@ -391,7 +409,7 @@ namespace Embedded_Systems_Project
             SetupTabPage.Location = new Point(4, 24);
             SetupTabPage.Name = "SetupTabPage";
             SetupTabPage.Padding = new Padding(3);
-            SetupTabPage.Size = new Size(533, 618);
+            SetupTabPage.Size = new Size(533, 573);
             SetupTabPage.TabIndex = 0;
             SetupTabPage.Text = "Setup";
             SetupTabPage.UseVisualStyleBackColor = true;
@@ -430,7 +448,7 @@ namespace Embedded_Systems_Project
             DigitalPage.Location = new Point(4, 24);
             DigitalPage.Name = "DigitalPage";
             DigitalPage.Padding = new Padding(3);
-            DigitalPage.Size = new Size(533, 618);
+            DigitalPage.Size = new Size(533, 573);
             DigitalPage.TabIndex = 1;
             DigitalPage.Text = "Digital I/O";
             DigitalPage.UseVisualStyleBackColor = true;
@@ -741,7 +759,7 @@ namespace Embedded_Systems_Project
             PortLightsPage.Location = new Point(4, 24);
             PortLightsPage.Name = "PortLightsPage";
             PortLightsPage.Padding = new Padding(3);
-            PortLightsPage.Size = new Size(533, 618);
+            PortLightsPage.Size = new Size(533, 573);
             PortLightsPage.TabIndex = 2;
             PortLightsPage.Text = "Ports-Lights";
             PortLightsPage.UseVisualStyleBackColor = true;
@@ -874,62 +892,178 @@ namespace Embedded_Systems_Project
             // 
             // TempPage
             // 
-            TempPage.Controls.Add(label22);
-            TempPage.Controls.Add(TempConstantAdjuster);
+            TempPage.Controls.Add(label25);
             TempPage.Controls.Add(TempLabel);
+            TempPage.Controls.Add(label23);
+            TempPage.Controls.Add(groupBox2);
+            TempPage.Controls.Add(label22);
             TempPage.Controls.Add(TempPlot);
             TempPage.Controls.Add(label21);
             TempPage.Controls.Add(label20);
             TempPage.Controls.Add(label19);
             TempPage.Controls.Add(label18);
-            TempPage.Controls.Add(numericUpDown3);
-            TempPage.Controls.Add(numericUpDown2);
-            TempPage.Controls.Add(numericUpDown1);
+            TempPage.Controls.Add(KiSet);
+            TempPage.Controls.Add(KpSet);
+            TempPage.Controls.Add(SetPointTemp);
             TempPage.Location = new Point(4, 24);
             TempPage.Name = "TempPage";
             TempPage.Padding = new Padding(3);
-            TempPage.Size = new Size(533, 618);
+            TempPage.Size = new Size(533, 573);
             TempPage.TabIndex = 3;
             TempPage.Text = "Temp Control";
             TempPage.UseVisualStyleBackColor = true;
             // 
-            // label22
+            // label25
             // 
-            label22.AutoSize = true;
-            label22.Location = new Point(113, 330);
-            label22.Name = "label22";
-            label22.Size = new Size(80, 15);
-            label22.TabIndex = 10;
-            label22.Text = "TEMP_CONST";
-            // 
-            // TempConstantAdjuster
-            // 
-            TempConstantAdjuster.Increment = new decimal(new int[] { 2, 0, 0, 0 });
-            TempConstantAdjuster.Location = new Point(199, 328);
-            TempConstantAdjuster.Maximum = new decimal(new int[] { 20000, 0, 0, 0 });
-            TempConstantAdjuster.Minimum = new decimal(new int[] { 10000, 0, 0, 0 });
-            TempConstantAdjuster.Name = "TempConstantAdjuster";
-            TempConstantAdjuster.Size = new Size(58, 23);
-            TempConstantAdjuster.TabIndex = 9;
-            TempConstantAdjuster.Value = new decimal(new int[] { 10000, 0, 0, 0 });
+            label25.AutoSize = true;
+            label25.BorderStyle = BorderStyle.Fixed3D;
+            label25.ImageAlign = ContentAlignment.MiddleLeft;
+            label25.Location = new Point(23, 296);
+            label25.Name = "label25";
+            label25.Size = new Size(15, 17);
+            label25.TabIndex = 17;
+            label25.Text = "0";
             // 
             // TempLabel
             // 
             TempLabel.AutoSize = true;
-            TempLabel.Location = new Point(199, 310);
+            TempLabel.BorderStyle = BorderStyle.Fixed3D;
+            TempLabel.ImageAlign = ContentAlignment.MiddleLeft;
+            TempLabel.Location = new Point(23, 245);
             TempLabel.Name = "TempLabel";
-            TempLabel.Size = new Size(44, 15);
-            TempLabel.TabIndex = 8;
-            TempLabel.Text = "label22";
+            TempLabel.Size = new Size(21, 17);
+            TempLabel.TabIndex = 16;
+            TempLabel.Text = "20";
+            // 
+            // label23
+            // 
+            label23.AutoSize = true;
+            label23.Location = new Point(20, 270);
+            label23.Name = "label23";
+            label23.Size = new Size(105, 15);
+            label23.TabIndex = 15;
+            label23.Text = "Motor Speed [ % ]:";
+            // 
+            // groupBox2
+            // 
+            groupBox2.Controls.Add(groupBox4);
+            groupBox2.Controls.Add(groupBox3);
+            groupBox2.Location = new Point(9, 403);
+            groupBox2.Name = "groupBox2";
+            groupBox2.Size = new Size(521, 164);
+            groupBox2.TabIndex = 14;
+            groupBox2.TabStop = false;
+            groupBox2.Text = "Cloud Data Logging";
+            // 
+            // groupBox4
+            // 
+            groupBox4.Controls.Add(dataLoggingStateLabel);
+            groupBox4.Controls.Add(disableLoggingButton);
+            groupBox4.Controls.Add(EnableLoggingButton);
+            groupBox4.Location = new Point(242, 22);
+            groupBox4.Name = "groupBox4";
+            groupBox4.Size = new Size(273, 135);
+            groupBox4.TabIndex = 1;
+            groupBox4.TabStop = false;
+            groupBox4.Text = "Auto Data Logging";
+            // 
+            // dataLoggingStateLabel
+            // 
+            dataLoggingStateLabel.AutoSize = true;
+            dataLoggingStateLabel.Location = new Point(88, 64);
+            dataLoggingStateLabel.Name = "dataLoggingStateLabel";
+            dataLoggingStateLabel.Size = new Size(97, 15);
+            dataLoggingStateLabel.TabIndex = 2;
+            dataLoggingStateLabel.Text = "Logging stopped";
+            dataLoggingStateLabel.TextAlign = ContentAlignment.MiddleCenter;
+            // 
+            // disableLoggingButton
+            // 
+            disableLoggingButton.Enabled = false;
+            disableLoggingButton.Location = new Point(6, 82);
+            disableLoggingButton.Name = "disableLoggingButton";
+            disableLoggingButton.Size = new Size(261, 23);
+            disableLoggingButton.TabIndex = 1;
+            disableLoggingButton.Text = "Stop Data Logging";
+            disableLoggingButton.UseVisualStyleBackColor = true;
+            // 
+            // EnableLoggingButton
+            // 
+            EnableLoggingButton.Location = new Point(6, 38);
+            EnableLoggingButton.Name = "EnableLoggingButton";
+            EnableLoggingButton.Size = new Size(261, 23);
+            EnableLoggingButton.TabIndex = 0;
+            EnableLoggingButton.Text = "Enable Data Logging";
+            EnableLoggingButton.UseVisualStyleBackColor = true;
+            // 
+            // groupBox3
+            // 
+            groupBox3.Controls.Add(numericUpDown4);
+            groupBox3.Controls.Add(InsertIntoTableButton);
+            groupBox3.Location = new Point(14, 22);
+            groupBox3.Name = "groupBox3";
+            groupBox3.Size = new Size(222, 135);
+            groupBox3.TabIndex = 0;
+            groupBox3.TabStop = false;
+            groupBox3.Text = "Manual Data Logging";
+            // 
+            // numericUpDown4
+            // 
+            numericUpDown4.Location = new Point(6, 40);
+            numericUpDown4.Name = "numericUpDown4";
+            numericUpDown4.Size = new Size(210, 23);
+            numericUpDown4.TabIndex = 1;
+            // 
+            // InsertIntoTableButton
+            // 
+            InsertIntoTableButton.Location = new Point(6, 81);
+            InsertIntoTableButton.Name = "InsertIntoTableButton";
+            InsertIntoTableButton.Size = new Size(210, 23);
+            InsertIntoTableButton.TabIndex = 0;
+            InsertIntoTableButton.Text = "Insert Data into Table";
+            InsertIntoTableButton.UseVisualStyleBackColor = true;
+            // 
+            // label22
+            // 
+            label22.AutoSize = true;
+            label22.Location = new Point(20, 221);
+            label22.Name = "label22";
+            label22.Size = new Size(106, 15);
+            label22.TabIndex = 12;
+            label22.Text = "Actual Temp [ °C ]:";
             // 
             // TempPlot
             // 
-            TempPlot.AutoValidate = AutoValidate.EnableAllowFocusChange;
-            TempPlot.DisplayScale = 1F;
-            TempPlot.Location = new Point(195, 23);
+            TempPlot.BorderlineColor = SystemColors.Window;
+            chartArea1.Name = "ChartArea1";
+            TempPlot.ChartAreas.Add(chartArea1);
+            TempPlot.Location = new Point(149, 41);
             TempPlot.Name = "TempPlot";
-            TempPlot.Size = new Size(317, 251);
-            TempPlot.TabIndex = 7;
+            series1.BorderColor = Color.FromArgb(64, 64, 64);
+            series1.BorderWidth = 3;
+            series1.ChartArea = "ChartArea1";
+            series1.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.FastLine;
+            series1.Color = Color.FromArgb(192, 0, 0);
+            series1.Name = "Temp";
+            series1.XValueType = System.Windows.Forms.DataVisualization.Charting.ChartValueType.Double;
+            series2.ChartArea = "ChartArea1";
+            series2.ChartType = System.Windows.Forms.DataVisualization.Charting.SeriesChartType.FastLine;
+            series2.Name = "Target";
+            TempPlot.Series.Add(series1);
+            TempPlot.Series.Add(series2);
+            TempPlot.Size = new Size(372, 338);
+            TempPlot.TabIndex = 11;
+            TempPlot.Text = "chart1";
+            title1.Docking = System.Windows.Forms.DataVisualization.Charting.Docking.Left;
+            title1.DockingOffset = 3;
+            title1.Name = "TempTitle";
+            title1.Text = "Temp (C°)";
+            title2.Docking = System.Windows.Forms.DataVisualization.Charting.Docking.Bottom;
+            title2.DockingOffset = -3;
+            title2.Name = "SamplesTitle";
+            title2.Text = "Samples";
+            TempPlot.Titles.Add(title1);
+            TempPlot.Titles.Add(title2);
             // 
             // label21
             // 
@@ -945,9 +1079,9 @@ namespace Embedded_Systems_Project
             label20.AutoSize = true;
             label20.Location = new Point(33, 23);
             label20.Name = "label20";
-            label20.Size = new Size(102, 15);
+            label20.Size = new Size(110, 15);
             label20.TabIndex = 5;
-            label20.Text = "Setpoint Temp [C]";
+            label20.Text = "Setpoint Temp [ °C]";
             // 
             // label19
             // 
@@ -967,29 +1101,29 @@ namespace Embedded_Systems_Project
             label18.TabIndex = 3;
             label18.Text = "Kp";
             // 
-            // numericUpDown3
+            // KiSet
             // 
-            numericUpDown3.Location = new Point(47, 139);
-            numericUpDown3.Name = "numericUpDown3";
-            numericUpDown3.Size = new Size(71, 23);
-            numericUpDown3.TabIndex = 2;
-            numericUpDown3.TextAlign = HorizontalAlignment.Center;
+            KiSet.Location = new Point(47, 139);
+            KiSet.Name = "KiSet";
+            KiSet.Size = new Size(71, 23);
+            KiSet.TabIndex = 2;
+            KiSet.TextAlign = HorizontalAlignment.Center;
             // 
-            // numericUpDown2
+            // KpSet
             // 
-            numericUpDown2.Location = new Point(47, 110);
-            numericUpDown2.Name = "numericUpDown2";
-            numericUpDown2.Size = new Size(71, 23);
-            numericUpDown2.TabIndex = 1;
-            numericUpDown2.TextAlign = HorizontalAlignment.Center;
+            KpSet.Location = new Point(47, 110);
+            KpSet.Name = "KpSet";
+            KpSet.Size = new Size(71, 23);
+            KpSet.TabIndex = 1;
+            KpSet.TextAlign = HorizontalAlignment.Center;
             // 
-            // numericUpDown1
+            // SetPointTemp
             // 
-            numericUpDown1.Location = new Point(47, 41);
-            numericUpDown1.Name = "numericUpDown1";
-            numericUpDown1.Size = new Size(71, 23);
-            numericUpDown1.TabIndex = 0;
-            numericUpDown1.TextAlign = HorizontalAlignment.Center;
+            SetPointTemp.Location = new Point(47, 41);
+            SetPointTemp.Name = "SetPointTemp";
+            SetPointTemp.Size = new Size(71, 23);
+            SetPointTemp.TabIndex = 0;
+            SetPointTemp.TextAlign = HorizontalAlignment.Center;
             // 
             // PORTC_LIGHTS_TIMER
             // 
@@ -1021,21 +1155,16 @@ namespace Embedded_Systems_Project
             DATABASE_TIMER.Tag = "TempPage";
             DATABASE_TIMER.Tick += DATABASE_TIMER_Tick;
             // 
-            // DEBUG_TEXT
+            // TEMP_TIMER
             // 
-            DEBUG_TEXT.AutoSize = true;
-            DEBUG_TEXT.Location = new Point(16, 661);
-            DEBUG_TEXT.Name = "DEBUG_TEXT";
-            DEBUG_TEXT.Size = new Size(44, 15);
-            DEBUG_TEXT.TabIndex = 3;
-            DEBUG_TEXT.Text = "label23";
+            TEMP_TIMER.Interval = 10;
+            TEMP_TIMER.Tick += TEMP_TIMER_Tick;
             // 
             // BoardControlForm
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(558, 681);
-            Controls.Add(DEBUG_TEXT);
+            ClientSize = new Size(558, 618);
             Controls.Add(TabController);
             Icon = (Icon)resources.GetObject("$this.Icon");
             MaximizeBox = false;
@@ -1057,12 +1186,16 @@ namespace Embedded_Systems_Project
             PotsGroup.PerformLayout();
             TempPage.ResumeLayout(false);
             TempPage.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)TempConstantAdjuster).EndInit();
-            ((System.ComponentModel.ISupportInitialize)numericUpDown3).EndInit();
-            ((System.ComponentModel.ISupportInitialize)numericUpDown2).EndInit();
-            ((System.ComponentModel.ISupportInitialize)numericUpDown1).EndInit();
+            groupBox2.ResumeLayout(false);
+            groupBox4.ResumeLayout(false);
+            groupBox4.PerformLayout();
+            groupBox3.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)numericUpDown4).EndInit();
+            ((System.ComponentModel.ISupportInitialize)TempPlot).EndInit();
+            ((System.ComponentModel.ISupportInitialize)KiSet).EndInit();
+            ((System.ComponentModel.ISupportInitialize)KpSet).EndInit();
+            ((System.ComponentModel.ISupportInitialize)SetPointTemp).EndInit();
             ResumeLayout(false);
-            PerformLayout();
         }
 
         #endregion
@@ -1151,14 +1284,23 @@ namespace Embedded_Systems_Project
         private Label label20;
         private Label label19;
         private Label label18;
-        private NumericUpDown numericUpDown3;
-        private NumericUpDown numericUpDown2;
-        private NumericUpDown numericUpDown1;
+        private NumericUpDown KiSet;
+        private NumericUpDown KpSet;
+        private NumericUpDown SetPointTemp;
         private System.Windows.Forms.Timer DATABASE_TIMER;
-        private ScottPlot.WinForms.FormsPlot TempPlot;
-        private Label TempLabel;
+        private System.Windows.Forms.DataVisualization.Charting.Chart TempPlot;
         private Label label22;
-        private NumericUpDown TempConstantAdjuster;
-        private Label DEBUG_TEXT;
+        private GroupBox groupBox2;
+        private GroupBox groupBox4;
+        private GroupBox groupBox3;
+        private NumericUpDown numericUpDown4;
+        private Button InsertIntoTableButton;
+        private Label dataLoggingStateLabel;
+        private Button disableLoggingButton;
+        private Button EnableLoggingButton;
+        private Label label23;
+        private Label label25;
+        private Label TempLabel;
+        private System.Windows.Forms.Timer TEMP_TIMER;
     }
 }

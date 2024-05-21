@@ -26,11 +26,11 @@ namespace Embedded_Systems_Project
         private static byte instructionByte, firstByte, secondByte;
 
         //Create a serial port
-        public SerialPort serialPort;
+        public SerialPort serialPort = new();
 
         public string[] portNames = SerialPort.GetPortNames();
 
-        public float TEMP_CONST = 26;
+        public float TEMP_CONST = 14247;
 
         public bool COM_Selected = false;
         public bool Baud_Selected = false;
@@ -40,19 +40,20 @@ namespace Embedded_Systems_Project
         public char[] SevenSegDisplayChars = new char[2];
 
 
-        public byte getInstruction()
+        public byte Instruction
         {
-            return instructionByte;
+           get { return instructionByte;}
+  
         }
 
-        public byte getFirstByte()
+        public byte FirstByte
         {
-            return firstByte;
+            get{return firstByte;}
         }
 
-        public byte getSecondByte()
+        public byte SecondByte
         {
-            return secondByte;
+            get{ return secondByte; }
         }
 
         public char getData()
@@ -143,7 +144,6 @@ namespace Embedded_Systems_Project
             byte[] bytes = { START_BYTE, instruction, STOP_BYTE };
             string output = System.Text.Encoding.Default.GetString(bytes);
 
-            serialPort.Write(output);
             serialPort.Write(output);
         }
         /// <summary>

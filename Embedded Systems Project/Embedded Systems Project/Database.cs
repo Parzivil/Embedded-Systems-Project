@@ -18,10 +18,15 @@ namespace Embedded_Systems_Project
 
 
 
-        public void init()
+        public void connect()
         {
             connectionString = $"server={SERVER_NAME};user={USER_NAME};database={DATABASE_NAME};password={PASSWORD_NAME};";
+            
 
+            mySqlConnection = new MySqlConnection(connectionString);
+
+            mySqlConnection.Open();
+            mySqlConnection.Close();
 
         }
 

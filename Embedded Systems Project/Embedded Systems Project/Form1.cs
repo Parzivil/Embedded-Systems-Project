@@ -37,7 +37,7 @@ namespace Embedded_Systems_Project
             PasswordTextBox.Text = myDatabase.PASSWORD_NAME;
             DatabaseTextBox.Text = myDatabase.DATABASE_NAME;
 
-            pi = new(0, 0, 1 / TEMP_TIMER.Interval);
+            pi = new(0, 0, 0.2);
 
             PORTA_lights = new LedBulb[8] { PA0, PA1, PA2, PA3, PA4, PA5, PA6, PA7 };
 
@@ -103,6 +103,9 @@ namespace Embedded_Systems_Project
 
                     TEMP_TIMER.Enabled = true;
                     DATABASE_TIMER.Enabled = true;
+
+                    serialController.writeSerial(serialController.SET_HEATER, (char)0xFFFF);
+                    serialController.DiscardSerial();
                 }
                 else
                 {
@@ -314,11 +317,12 @@ namespace Embedded_Systems_Project
             int percentage = 100 - LightScrollBar.Value;
             if (percentage >= 0)
             {
-                ushort value = (ushort)(percentage * PWM_MAX / 100);
+                char value = (char)(percentage * PWM_MAX / 100);
                 serialController.writeSerial(serialController.SET_LIGHT, value);
                 serialController.ReadSerial(); //Clear the read buffer of the confirmation code
 
-                LightPercentageLabel.Text = percentage.ToString() + "%" + " DEBUG: " + value.ToString("X") + "\n" + BitConverter.ToString(new byte[] { serialController.START_BYTE, serialController.Instruction, serialController.FirstByte, serialController.SecondByte, serialController.STOP_BYTE });
+                LIGHT_TIMER_Tick(sender, e);
+
             }
             else
             {
@@ -347,7 +351,7 @@ namespace Embedded_Systems_Project
             if (serialController.Instruction == serialController.READ_TEMP)
             {
 
-                char temp = serialController.getData();
+                int temp = serialController.getData();
 
                 double tempF = temp * serialController.TEMP_CONST / 0xFFFF;
 
@@ -365,30 +369,29 @@ namespace Embedded_Systems_Project
             pi.PGain = (double)KpSet.Value;
             pi.targetVal = (double)SetPointTemp.Value;
 
-            //Turn heater on
-            serialController.writeSerial(serialController.SET_HEATER, 0xFFFF);
-            serialController.DiscardSerial();
-
             serialController.writeSerial(serialController.READ_TEMP);
             serialController.ReadSerial();
 
             if (serialController.Instruction == serialController.READ_TEMP)
             {
+                char temp = serialController.getData();
 
-                float temp = serialController.getData();
-
-                double tempF = (temp / 2550);
-
+                double tempF = (((byte)temp * (5.0 / 0xFF)) / 0.05);
 
                 graphUpdater.Update(tempF, pi.targetVal); //Plot the temp
 
-                TempLabel.Text = tempF.ToString();
+                TempLabel.Text = Math.Round(tempF, 2).ToString();
 
                 double PI_val = pi.Compute(tempF);
 
+
+                int motorSpeed = (int)(((double)PI_val / 0xFFFF) * 399);
+
+                MotorSpeedLabel.Text = PI_val.ToString();
+
                 //Config fan
-                serialController.writeSerial(serialController.SET_MOTOR, (ushort)(PI_val * -1));
-                serialController.DiscardSerial();
+                serialController.writeSerial(serialController.SET_MOTOR, (char)(PI_val));
+                serialController.ReadSerial();
 
             }
         }

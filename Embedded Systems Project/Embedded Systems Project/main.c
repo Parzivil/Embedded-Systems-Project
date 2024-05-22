@@ -153,6 +153,7 @@ void Set(unsigned char INS){
 		
 		//Set Light PWM to inputed data
 		case SET_LIGHT:
+			TCCR1B = 0b00011010;
 			OCR1BH = MSB;
 			OCR1BL = LSB;
 			Transmit_Short(SET_LIGHT, OCR1B); //Send back instruction to confirm
@@ -160,8 +161,9 @@ void Set(unsigned char INS){
 		
 		//Set Motor PWM to inputed data
 		case SET_MOTOR:
-			OCR1AH = MSB;
-			OCR1AL = LSB;
+			TCCR1B = 0b00011001;
+			OCR1AH = LSB;
+			OCR1AL = MSB;
 			Transmit_Short(SET_MOTOR, OCR1A); //Send back instruction to confirm
 		break;
 	}

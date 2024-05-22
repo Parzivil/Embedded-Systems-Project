@@ -167,7 +167,7 @@ namespace Embedded_Systems_Project
         /// </summary>
         /// <param name="instruction"></param>
         /// <param name="val"></param>
-        public void writeSerial(byte instruction, ushort val)
+        public void writeSerial(byte instruction, char val)
         {
             byte[] bytes = {START_BYTE , //Send the start byte
                             instruction , //Send the instruction

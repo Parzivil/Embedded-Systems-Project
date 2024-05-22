@@ -13,15 +13,12 @@ namespace Embedded_Systems_Project
         private double target;
         public double error;
 
-        public float interval = 0;
-
+        public double interval;
         public int count = 0;
-
-        private DateTime prevTime;
         private double errorSum = 0;
 
 
-        public PI_Controller(double kp, double ki, float interval)
+        public PI_Controller(double kp, double ki, double interval)
         {
             this.kp = kp;
             this.ki = ki;
@@ -69,7 +66,6 @@ namespace Embedded_Systems_Project
         public void reset()
         {
             errorSum = 0;
-            prevTime = DateTime.Now;
         }
     }
 }

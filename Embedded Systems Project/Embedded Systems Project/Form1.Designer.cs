@@ -108,7 +108,7 @@ namespace Embedded_Systems_Project
             PotGauge2 = new AquaGauge();
             PotGauge1 = new AquaGauge();
             TempPage = new TabPage();
-            label25 = new Label();
+            MotorSpeedLabel = new Label();
             TempLabel = new Label();
             label23 = new Label();
             groupBox2 = new GroupBox();
@@ -892,7 +892,7 @@ namespace Embedded_Systems_Project
             // 
             // TempPage
             // 
-            TempPage.Controls.Add(label25);
+            TempPage.Controls.Add(MotorSpeedLabel);
             TempPage.Controls.Add(TempLabel);
             TempPage.Controls.Add(label23);
             TempPage.Controls.Add(groupBox2);
@@ -913,16 +913,16 @@ namespace Embedded_Systems_Project
             TempPage.Text = "Temp Control";
             TempPage.UseVisualStyleBackColor = true;
             // 
-            // label25
+            // MotorSpeedLabel
             // 
-            label25.AutoSize = true;
-            label25.BorderStyle = BorderStyle.Fixed3D;
-            label25.ImageAlign = ContentAlignment.MiddleLeft;
-            label25.Location = new Point(23, 296);
-            label25.Name = "label25";
-            label25.Size = new Size(15, 17);
-            label25.TabIndex = 17;
-            label25.Text = "0";
+            MotorSpeedLabel.AutoSize = true;
+            MotorSpeedLabel.BorderStyle = BorderStyle.Fixed3D;
+            MotorSpeedLabel.ImageAlign = ContentAlignment.MiddleLeft;
+            MotorSpeedLabel.Location = new Point(23, 296);
+            MotorSpeedLabel.Name = "MotorSpeedLabel";
+            MotorSpeedLabel.Size = new Size(15, 17);
+            MotorSpeedLabel.TabIndex = 17;
+            MotorSpeedLabel.Text = "0";
             // 
             // TempLabel
             // 
@@ -1103,7 +1103,10 @@ namespace Embedded_Systems_Project
             // 
             // KiSet
             // 
+            KiSet.DecimalPlaces = 3;
+            KiSet.Increment = new decimal(new int[] { 1, 0, 0, 196608 });
             KiSet.Location = new Point(47, 139);
+            KiSet.Maximum = new decimal(new int[] { 1, 0, 0, 0 });
             KiSet.Name = "KiSet";
             KiSet.Size = new Size(71, 23);
             KiSet.TabIndex = 2;
@@ -1111,6 +1114,8 @@ namespace Embedded_Systems_Project
             // 
             // KpSet
             // 
+            KpSet.DecimalPlaces = 2;
+            KpSet.Increment = new decimal(new int[] { 1, 0, 0, 65536 });
             KpSet.Location = new Point(47, 110);
             KpSet.Name = "KpSet";
             KpSet.Size = new Size(71, 23);
@@ -1133,19 +1138,19 @@ namespace Embedded_Systems_Project
             // 
             // POT1_TIMER
             // 
-            POT1_TIMER.Interval = 50;
+            POT1_TIMER.Interval = 10;
             POT1_TIMER.Tag = "LightsPage";
             POT1_TIMER.Tick += POT1_TIMER_Tick;
             // 
             // POT2_TIMER
             // 
-            POT2_TIMER.Interval = 50;
+            POT2_TIMER.Interval = 10;
             POT2_TIMER.Tag = "LightsPage";
             POT2_TIMER.Tick += POT2_TIMER_Tick;
             // 
             // LIGHT_TIMER
             // 
-            LIGHT_TIMER.Interval = 50;
+            LIGHT_TIMER.Interval = 10;
             LIGHT_TIMER.Tag = "LightsPage";
             LIGHT_TIMER.Tick += LIGHT_TIMER_Tick;
             // 
@@ -1156,6 +1161,7 @@ namespace Embedded_Systems_Project
             // 
             // TEMP_TIMER
             // 
+            TEMP_TIMER.Interval = 20;
             TEMP_TIMER.Tick += TEMP_TIMER_Tick;
             // 
             // BoardControlForm
@@ -1289,7 +1295,7 @@ namespace Embedded_Systems_Project
         private Button disableLoggingButton;
         private Button EnableLoggingButton;
         private Label label23;
-        private Label label25;
+        private Label MotorSpeedLabel;
         private Label TempLabel;
         private System.Windows.Forms.Timer TEMP_TIMER;
     }

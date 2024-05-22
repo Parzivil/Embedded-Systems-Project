@@ -13,16 +13,19 @@ namespace Embedded_Systems_Project
         private double target;
         public double error;
 
+        public float interval = 0;
+
         public int count = 0;
 
         private DateTime prevTime;
         private double errorSum = 0;
 
 
-        public PI_Controller(double kp, double ki)
+        public PI_Controller(double kp, double ki, float interval)
         {
             this.kp = kp;
             this.ki = ki;
+            this.interval = interval;
         }
 
         public double PGain
@@ -43,27 +46,22 @@ namespace Embedded_Systems_Project
             set { target = value;}
         }
 
+        public float timerInterval
+        {
+            get { return timerInterval; }
+            set { timerInterval = value; }
+        }
+
         public double Compute(double input)
         {
             error = target - input;
 
             double pTerm = error * kp;
-            double iTerm = 0;
+           
 
-            DateTime nowTime = DateTime.Now;
+            errorSum += error * interval;
 
-            double pSum = 0;
-
-            if(prevTime != null)
-            {
-                double dt = (nowTime - prevTime).TotalSeconds;
-
-                pSum = errorSum + dt * error;
-                iTerm = ki * pSum;
-            }
-
-            prevTime = nowTime;
-            errorSum = pSum;
+            double iTerm = ki * errorSum;
 
             return pTerm + iTerm;
         }

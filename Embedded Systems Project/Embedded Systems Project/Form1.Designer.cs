@@ -1133,31 +1133,29 @@ namespace Embedded_Systems_Project
             // 
             // POT1_TIMER
             // 
-            POT1_TIMER.Interval = 12;
+            POT1_TIMER.Interval = 50;
             POT1_TIMER.Tag = "LightsPage";
             POT1_TIMER.Tick += POT1_TIMER_Tick;
             // 
             // POT2_TIMER
             // 
-            POT2_TIMER.Interval = 11;
+            POT2_TIMER.Interval = 50;
             POT2_TIMER.Tag = "LightsPage";
             POT2_TIMER.Tick += POT2_TIMER_Tick;
             // 
             // LIGHT_TIMER
             // 
-            LIGHT_TIMER.Interval = 10;
+            LIGHT_TIMER.Interval = 50;
             LIGHT_TIMER.Tag = "LightsPage";
             LIGHT_TIMER.Tick += LIGHT_TIMER_Tick;
             // 
             // DATABASE_TIMER
             // 
-            DATABASE_TIMER.Interval = 50;
             DATABASE_TIMER.Tag = "TempPage";
             DATABASE_TIMER.Tick += DATABASE_TIMER_Tick;
             // 
             // TEMP_TIMER
             // 
-            TEMP_TIMER.Interval = 10;
             TEMP_TIMER.Tick += TEMP_TIMER_Tick;
             // 
             // BoardControlForm
@@ -1239,14 +1237,6 @@ namespace Embedded_Systems_Project
         private LedBulb ServerConnectionLED;
         private Label SerialConnectionErrorLabel;
         private Label label7;
-        private LedBulb ledBulb4;
-        private LedBulb ledBulb5;
-        private LedBulb ledBulb3;
-        private LedBulb ledBulb2;
-        private LedBulb ledBulb6;
-        private LedBulb ledBulb7;
-        private LedBulb ledBulb8;
-        private LedBulb ledBulb9;
         private Label label12;
         private Label label13;
         private Label label14;

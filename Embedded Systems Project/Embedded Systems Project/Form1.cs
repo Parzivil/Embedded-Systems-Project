@@ -9,7 +9,7 @@ namespace Embedded_Systems_Project
     {
         Database myDatabase = new(); //Responsible for controlling the database
         SerialController serialController = new(); //Responsible for controlling the 
-        PI_Controller pi = new(0, 0);
+        PI_Controller pi;
 
         private static LiveGraphUpdater? graphUpdater;
 
@@ -22,7 +22,7 @@ namespace Embedded_Systems_Project
         private readonly char[] SevenSegDisplayChars = new char[2];
 
         private readonly LedBulb[] PORTA_lights;
-        public const ushort PWM_MAX = 0x0190; //This may need to be 399
+        public const ushort PWM_MAX = 0x0190; //399 is the max PWM value
 
         /// <summary>
         /// Constructor for BoardControlForm Class
@@ -36,6 +36,8 @@ namespace Embedded_Systems_Project
             UsernameTextBox.Text = myDatabase.USER_NAME;
             PasswordTextBox.Text = myDatabase.PASSWORD_NAME;
             DatabaseTextBox.Text = myDatabase.DATABASE_NAME;
+
+            pi = new(0, 0, 1 / TEMP_TIMER.Interval);
 
             PORTA_lights = new LedBulb[8] { PA0, PA1, PA2, PA3, PA4, PA5, PA6, PA7 };
 
@@ -66,28 +68,54 @@ namespace Embedded_Systems_Project
         {
             TabPage currentTab = (sender as TabControl).SelectedTab;
 
-            if (currentTab == DigitalPage)
+            if (serialController.serialPort.IsOpen)
             {
-                EnableGaugeTimers(false);
-                PORTC_LIGHTS_TIMER.Enabled = true;
-                DATABASE_TIMER.Enabled = false;
-            }
-            else if (currentTab == PortLightsPage)
-            {
-                EnableGaugeTimers(true);
-                DATABASE_TIMER.Enabled = false;
-            }
+                if (currentTab == DigitalPage)
+                {
+                    PORTC_LIGHTS_TIMER.Enabled = true;
 
-            else if (currentTab == TempPage)
-            {
-                DATABASE_TIMER.Enabled = true;
-            }
-            else
-            {
-                EnableGaugeTimers(false);
-                PORTC_LIGHTS_TIMER.Enabled = false;
-                DATABASE_TIMER.Enabled = false;
+                    POT1_TIMER.Enabled = false;
+                    POT2_TIMER.Enabled = false;
+                    LIGHT_TIMER.Enabled = false;
 
+                    TEMP_TIMER.Enabled = false;
+                    DATABASE_TIMER.Enabled = false;
+                }
+                else if (currentTab == PortLightsPage)
+                {
+                    PORTC_LIGHTS_TIMER.Enabled = false;
+
+                    POT1_TIMER.Enabled = true;
+                    POT2_TIMER.Enabled = true;
+                    LIGHT_TIMER.Enabled = true;
+
+                    TEMP_TIMER.Enabled = false;
+                    DATABASE_TIMER.Enabled = false;
+                }
+
+                else if (currentTab == TempPage)
+                {
+                    PORTC_LIGHTS_TIMER.Enabled = false;
+
+                    POT1_TIMER.Enabled = false;
+                    POT2_TIMER.Enabled = false;
+                    LIGHT_TIMER.Enabled = false;
+
+                    TEMP_TIMER.Enabled = true;
+                    DATABASE_TIMER.Enabled = true;
+                }
+                else
+                {
+                    PORTC_LIGHTS_TIMER.Enabled = false;
+
+                    POT1_TIMER.Enabled = false;
+                    POT2_TIMER.Enabled = false;
+                    LIGHT_TIMER.Enabled = false;
+
+                    TEMP_TIMER.Enabled = false;
+                    DATABASE_TIMER.Enabled = false;
+
+                }
             }
         }
 
@@ -116,8 +144,6 @@ namespace Embedded_Systems_Project
                     ConnectButton.Enabled = false; //Disable the connect button
 
                     RefreshButton.Enabled = true; //Enable the refresh button
-
-                    TEMP_TIMER.Enabled = true;
 
                     if (serialController.serialPort.IsOpen)
                     {
@@ -152,10 +178,13 @@ namespace Embedded_Systems_Project
 
             RefreshButton.Enabled = false;
 
-            EnableGaugeTimers(false);
+            //Disable all the timers
+            PORTC_LIGHTS_TIMER.Enabled = false;
+            POT1_TIMER.Enabled = false;
+            POT2_TIMER.Enabled = false;
             LIGHT_TIMER.Enabled = false;
-
             TEMP_TIMER.Enabled = false;
+            DATABASE_TIMER.Enabled = false;
         }
 
         //Database Conection buttons
@@ -229,6 +258,10 @@ namespace Embedded_Systems_Project
             refreshSevenSeg(); //Refresh the seven Segment display
         }
 
+        /// <summary>
+        /// Takes in a value and sets the light array to that value
+        /// </summary>
+        /// <param name="val"></param>
         private void Set_PORTA_Lights(char val)
         {
             int intValue = val; //Convert the char into an int
@@ -239,38 +272,11 @@ namespace Embedded_Systems_Project
             }
         }
 
-        /// <summary>
-        /// Enables the gauge timers 
-        /// </summary>
-        /// <param name="enable">Boolean whether the timers are enabled or not (true is enabled, false is not enabled)</param>
-        private void EnableGaugeTimers(bool enable)
-        {
-            if (enable)
-            {
-                //Enable the ports 
-                POT1_TIMER.Enabled = true;
-                POT2_TIMER.Enabled = true;
-                LIGHT_TIMER.Enabled = true;
-
-                PORTC_LIGHTS_TIMER.Enabled = false;
-            }
-
-            else
-            {
-                POT1_TIMER.Enabled = false;
-                POT2_TIMER.Enabled = false;
-                LIGHT_TIMER.Enabled = false;
-            }
-
-        }
-
-        //Timers
-
+        //************************************************TIMERS*************************************************//
         private void PORTC_LIGHTS_TIMER_Tick(object sender, EventArgs e)
         {
             serialController.writeSerial(serialController.READ_PINA);
             serialController.ReadSerial();
-
 
             if (serialController.Instruction == serialController.READ_PINA)
             {
@@ -330,8 +336,6 @@ namespace Embedded_Systems_Project
                 float val = serialController.getData();
                 LightGauge.Value = val;
             }
-
-
         }
 
         private void DATABASE_TIMER_Tick(object sender, EventArgs e)
@@ -349,8 +353,6 @@ namespace Embedded_Systems_Project
 
                 //myDatabase.SendToDatabase((float)Math.Round(tempF, 2)); //Send the data to the database
 
-
-
                 Invalidate();
                 Update();
             }
@@ -363,16 +365,19 @@ namespace Embedded_Systems_Project
             pi.PGain = (double)KpSet.Value;
             pi.targetVal = (double)SetPointTemp.Value;
 
+            //Turn heater on
+            serialController.writeSerial(serialController.SET_HEATER, 0xFFFF);
+            serialController.DiscardSerial();
 
             serialController.writeSerial(serialController.READ_TEMP);
             serialController.ReadSerial();
 
-            if (serialController.Instruction == serialController.READ_TEMP && serialController.getData() < 150)
+            if (serialController.Instruction == serialController.READ_TEMP)
             {
 
-                char temp = serialController.getData();
+                float temp = serialController.getData();
 
-                double tempF = temp * serialController.TEMP_CONST / 0xFFFF;
+                double tempF = (temp / 2550);
 
 
                 graphUpdater.Update(tempF, pi.targetVal); //Plot the temp
@@ -381,28 +386,9 @@ namespace Embedded_Systems_Project
 
                 double PI_val = pi.Compute(tempF);
 
-
-                if (PI_val > 0)
-                {
-                    //Turn fan off
-                    serialController.writeSerial(serialController.SET_MOTOR, 0);
-                    serialController.ReadSerial();
-
-                    //Config heater
-                    serialController.writeSerial(serialController.SET_HEATER, (ushort)PI_val);
-                    serialController.ReadSerial();
-                }
-                else if(PI_val < 0)
-                {
-                    //Turn heater off
-                    serialController.writeSerial(serialController.SET_HEATER, 0);
-                    serialController.ReadSerial();
-
-                    //Config fan
-                    serialController.writeSerial(serialController.SET_MOTOR, (ushort)PI_val);
-                    serialController.ReadSerial();
-                }
-                
+                //Config fan
+                serialController.writeSerial(serialController.SET_MOTOR, (ushort)(PI_val * -1));
+                serialController.DiscardSerial();
 
             }
         }
@@ -524,7 +510,5 @@ namespace Embedded_Systems_Project
         {
             Baud_Selected = true;
         }
-
-
     }
 }

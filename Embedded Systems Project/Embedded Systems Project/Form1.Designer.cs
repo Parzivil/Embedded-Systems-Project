@@ -117,7 +117,7 @@ namespace Embedded_Systems_Project
             disableLoggingButton = new Button();
             EnableLoggingButton = new Button();
             groupBox3 = new GroupBox();
-            numericUpDown4 = new NumericUpDown();
+            manualDatabaseValue = new NumericUpDown();
             InsertIntoTableButton = new Button();
             label22 = new Label();
             TempPlot = new System.Windows.Forms.DataVisualization.Charting.Chart();
@@ -146,7 +146,7 @@ namespace Embedded_Systems_Project
             groupBox2.SuspendLayout();
             groupBox4.SuspendLayout();
             groupBox3.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)numericUpDown4).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)manualDatabaseValue).BeginInit();
             ((System.ComponentModel.ISupportInitialize)TempPlot).BeginInit();
             ((System.ComponentModel.ISupportInitialize)KiSet).BeginInit();
             ((System.ComponentModel.ISupportInitialize)KpSet).BeginInit();
@@ -986,6 +986,7 @@ namespace Embedded_Systems_Project
             disableLoggingButton.TabIndex = 1;
             disableLoggingButton.Text = "Stop Data Logging";
             disableLoggingButton.UseVisualStyleBackColor = true;
+            disableLoggingButton.Click += disableLoggingButton_Click;
             // 
             // EnableLoggingButton
             // 
@@ -995,10 +996,11 @@ namespace Embedded_Systems_Project
             EnableLoggingButton.TabIndex = 0;
             EnableLoggingButton.Text = "Enable Data Logging";
             EnableLoggingButton.UseVisualStyleBackColor = true;
+            EnableLoggingButton.Click += EnableLoggingButton_Click;
             // 
             // groupBox3
             // 
-            groupBox3.Controls.Add(numericUpDown4);
+            groupBox3.Controls.Add(manualDatabaseValue);
             groupBox3.Controls.Add(InsertIntoTableButton);
             groupBox3.Location = new Point(14, 22);
             groupBox3.Name = "groupBox3";
@@ -1007,12 +1009,12 @@ namespace Embedded_Systems_Project
             groupBox3.TabStop = false;
             groupBox3.Text = "Manual Data Logging";
             // 
-            // numericUpDown4
+            // manualDatabaseValue
             // 
-            numericUpDown4.Location = new Point(6, 40);
-            numericUpDown4.Name = "numericUpDown4";
-            numericUpDown4.Size = new Size(210, 23);
-            numericUpDown4.TabIndex = 1;
+            manualDatabaseValue.Location = new Point(6, 40);
+            manualDatabaseValue.Name = "manualDatabaseValue";
+            manualDatabaseValue.Size = new Size(210, 23);
+            manualDatabaseValue.TabIndex = 1;
             // 
             // InsertIntoTableButton
             // 
@@ -1022,6 +1024,7 @@ namespace Embedded_Systems_Project
             InsertIntoTableButton.TabIndex = 0;
             InsertIntoTableButton.Text = "Insert Data into Table";
             InsertIntoTableButton.UseVisualStyleBackColor = true;
+            InsertIntoTableButton.Click += InsertIntoTableButton_Click;
             // 
             // label22
             // 
@@ -1161,7 +1164,6 @@ namespace Embedded_Systems_Project
             // 
             // TEMP_TIMER
             // 
-            TEMP_TIMER.Interval = 20;
             TEMP_TIMER.Tick += TEMP_TIMER_Tick;
             // 
             // BoardControlForm
@@ -1194,7 +1196,7 @@ namespace Embedded_Systems_Project
             groupBox4.ResumeLayout(false);
             groupBox4.PerformLayout();
             groupBox3.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)numericUpDown4).EndInit();
+            ((System.ComponentModel.ISupportInitialize)manualDatabaseValue).EndInit();
             ((System.ComponentModel.ISupportInitialize)TempPlot).EndInit();
             ((System.ComponentModel.ISupportInitialize)KiSet).EndInit();
             ((System.ComponentModel.ISupportInitialize)KpSet).EndInit();
@@ -1289,7 +1291,7 @@ namespace Embedded_Systems_Project
         private GroupBox groupBox2;
         private GroupBox groupBox4;
         private GroupBox groupBox3;
-        private NumericUpDown numericUpDown4;
+        private NumericUpDown manualDatabaseValue;
         private Button InsertIntoTableButton;
         private Label dataLoggingStateLabel;
         private Button disableLoggingButton;

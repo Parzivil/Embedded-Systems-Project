@@ -24,6 +24,8 @@ namespace Embedded_Systems_Project
         private readonly LedBulb[] PORTA_lights;
         public const ushort PWM_MAX = 0x0190; //399 is the max PWM value
 
+        bool enableDatabaseLogging = true;
+
         /// <summary>
         /// Constructor for BoardControlForm Class
         /// </summary>
@@ -37,7 +39,9 @@ namespace Embedded_Systems_Project
             PasswordTextBox.Text = myDatabase.PASSWORD_NAME;
             DatabaseTextBox.Text = myDatabase.DATABASE_NAME;
 
-            pi = new(0, 0, 0.2);
+
+
+            pi = new(0, 0, 0.1);
 
             PORTA_lights = new LedBulb[8] { PA0, PA1, PA2, PA3, PA4, PA5, PA6, PA7 };
 
@@ -200,7 +204,7 @@ namespace Embedded_Systems_Project
         {
             try
             {
-
+                myDatabase.connect();
 
                 ServerConnectionLED.On = true;
 
@@ -351,14 +355,11 @@ namespace Embedded_Systems_Project
             if (serialController.Instruction == serialController.READ_TEMP)
             {
 
-                int temp = serialController.getData();
+                char temp = serialController.getData();
 
-                double tempF = temp * serialController.TEMP_CONST / 0xFFFF;
+                double tempF = (((byte)temp * (5.0 / 0xFF)) / 0.05);
 
-                //myDatabase.SendToDatabase((float)Math.Round(tempF, 2)); //Send the data to the database
-
-                Invalidate();
-                Update();
+                if(enableDatabaseLogging) myDatabase.SendToDatabase((float)Math.Round(tempF, 2)); //Send the data to the database
             }
         }
 
@@ -396,6 +397,24 @@ namespace Embedded_Systems_Project
             }
         }
 
+        private void InsertIntoTableButton_Click(object sender, EventArgs e)
+        {
+            myDatabase.SendToDatabase((float)manualDatabaseValue.Value); //Send the data to the database
+        }
+
+        private void EnableLoggingButton_Click(object sender, EventArgs e)
+        {
+            enableDatabaseLogging = true;
+            EnableLoggingButton.Enabled = false;
+            disableLoggingButton.Enabled = true;
+        }
+
+        private void disableLoggingButton_Click(object sender, EventArgs e)
+        {
+            enableDatabaseLogging = false;
+            EnableLoggingButton.Enabled = true;
+            disableLoggingButton.Enabled = false;
+        }
 
 
         //Check box control

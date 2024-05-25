@@ -9,7 +9,7 @@ namespace Embedded_Systems_Project
 
         Series seriesMain;
         Series seriesSecond;
- 
+
         public int maxWidth = 500;
 
         long count = 0;
@@ -26,23 +26,24 @@ namespace Embedded_Systems_Project
             seriesSecond = plot.Series.FindByName("Target");
 
         }
-        
-        public void Update(double temp, double target) {
-                if (count > maxWidth)
-                {
-                    seriesMain.Points.RemoveAt(0);
-                    seriesSecond.Points.RemoveAt(0);
 
-                    area.RecalculateAxesScale();
-                }
+        public void Update(double temp, double target)
+        {
+            if (count > maxWidth)
+            {
+                seriesMain.Points.RemoveAt(0);
+                seriesSecond.Points.RemoveAt(0);
+
+                area.RecalculateAxesScale();
+            }
 
 
-                seriesMain.Points.AddXY(count, temp);
-                seriesSecond.Points.AddXY(count, target);
-                count++;
+            seriesMain.Points.AddXY(count, temp);
+            seriesSecond.Points.AddXY(count, target);
+            count++;
 
-                plot.Update();
-            
+            plot.Update();
+
         }
     }
 }

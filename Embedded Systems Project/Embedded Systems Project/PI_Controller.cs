@@ -1,11 +1,4 @@
-﻿using Org.BouncyCastle.Asn1.X509;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Embedded_Systems_Project
+﻿namespace Embedded_Systems_Project
 {
     internal class PI_Controller
     {
@@ -40,7 +33,7 @@ namespace Embedded_Systems_Project
         public double targetVal
         {
             get { return target; }
-            set { target = value;}
+            set { target = value; }
         }
 
         public float timerInterval
@@ -54,7 +47,7 @@ namespace Embedded_Systems_Project
             error = target - input;
 
             double pTerm = error * kp;
-           
+
 
             errorSum += error * interval;
 

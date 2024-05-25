@@ -1,5 +1,4 @@
 using Embedded_Systems_Project.Addons;
-using MySql.Data.MySqlClient;
 using System.IO.Ports;
 
 
@@ -33,15 +32,17 @@ namespace Embedded_Systems_Project
         {
             InitializeComponent();
 
+            DatabaseDisconnectButton.Enabled = false;
+
             _ = ServerNameSelection.Items.Add(myDatabase.SERVER_NAME);
             ServerNameSelection.Text = myDatabase.SERVER_NAME;
             UsernameTextBox.Text = myDatabase.USER_NAME;
             PasswordTextBox.Text = myDatabase.PASSWORD_NAME;
             DatabaseTextBox.Text = myDatabase.DATABASE_NAME;
 
+            double timerInterval = 1/TEMP_TIMER.Interval;
 
-
-            pi = new(0, 0, 0.1);
+            pi = new(0, 0, timerInterval);
 
             PORTA_lights = new LedBulb[8] { PA0, PA1, PA2, PA3, PA4, PA5, PA6, PA7 };
 
@@ -61,6 +62,9 @@ namespace Embedded_Systems_Project
             BaudrateSelection.Text = baudrates[3].ToString();
 
             graphUpdater = new LiveGraphUpdater(TempPlot);
+
+            enableDatabaseLogging = false;
+            EnableLoggingButton.Enabled = false;
         }
 
         /// <summary>
@@ -139,34 +143,27 @@ namespace Embedded_Systems_Project
             //Check that a port and baud has been selected
             if (COM_Selected && Baud_Selected)
             {
-                try
-                {
-                    //Set a new serial port
-                    serialController.serialPort = new SerialPort(COM_Port_Dropdown.SelectedItem.ToString(),
+
+                Exception? ex = serialController.Connect(COM_Port_Dropdown.SelectedItem.ToString(),
                                             int.Parse(BaudrateSelection.SelectedItem.ToString()));
 
-                    serialController.serialPort.Open(); //Open the serial port
-
+                //If an error was thrown
+                if (ex != null)
+                {
+                    SerialPortStatusBulb.On = false; //Turn connection status bulb on
+                    SerialConnectionErrorLabel.Text = ex.Message; //Show error message if conenction failed
+                    SerialConnectionErrorLabel.Show(); //Show the error message
+                    DisconnectButton.Enabled = true; //Enable the disconnect button
+                    
+                }
+                //If connection was a sucess
+                else
+                {
+                    SerialPortStatusBulb.On = true; //Turn connection status bulb on
                     DisconnectButton.Enabled = true; //Enable the disconnect button
                     ConnectButton.Enabled = false; //Disable the connect button
-
                     RefreshButton.Enabled = true; //Enable the refresh button
-
-                    if (serialController.serialPort.IsOpen)
-                    {
-                        SerialPortStatusBulb.On = true; //Turn connection status bulb on
-                    }
-                    else
-                    {
-                        SerialPortStatusBulb.Blink(30); //Blink if there is an issue
-                    }
                 }
-                catch (Exception ex)
-                {
-                    SerialConnectionErrorLabel.Text = "Connnection Error: " + ex.Message; //Show error message if conenction failed
-                    SerialConnectionErrorLabel.Show(); //Show the error message
-                }
-
             }
 
         }
@@ -192,6 +189,9 @@ namespace Embedded_Systems_Project
             LIGHT_TIMER.Enabled = false;
             TEMP_TIMER.Enabled = false;
             DATABASE_TIMER.Enabled = false;
+
+            SerialConnectionErrorLabel.Hide(); //Show the error message
+            SerialPortStatusBulb.On = false;
         }
 
         //Database Conection buttons
@@ -211,10 +211,16 @@ namespace Embedded_Systems_Project
                 if (serialController.serialPort.IsOpen)
                 {
                     DATABASE_TIMER.Enabled = true;
+                    enableDatabaseLogging = true;
+
+                    EnableLoggingButton.Enabled = true;
+
+                    DatabaseDisconnectButton.Enabled = true;
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                MessageBox.Show(ex.Message);
                 ServerConnectionLED.On = false;
                 DATABASE_TIMER.Enabled = false;
             }
@@ -230,6 +236,8 @@ namespace Embedded_Systems_Project
             DATABASE_TIMER.Enabled = false;
 
             ServerConnectionLED.On = false;
+            enableDatabaseLogging = false;
+            EnableLoggingButton.Enabled = false;
         }
 
 
@@ -359,7 +367,7 @@ namespace Embedded_Systems_Project
 
                 double tempF = (((byte)temp * (5.0 / 0xFF)) / 0.05);
 
-                if(enableDatabaseLogging) myDatabase.SendToDatabase((float)Math.Round(tempF, 2)); //Send the data to the database
+                if (enableDatabaseLogging) myDatabase.SendToDatabase((float)Math.Round(tempF, 2)); //Send the data to the database
             }
         }
 
@@ -386,13 +394,17 @@ namespace Embedded_Systems_Project
                 double PI_val = pi.Compute(tempF);
 
 
-                int motorSpeed = (int)(((double)PI_val / 0xFFFF) * 399);
+                int motorSpeed = (int)((PI_val * -1 / 0xFF) * 399);
+                motorSpeed = Math.Clamp(motorSpeed, 0, 399);
 
-                MotorSpeedLabel.Text = PI_val.ToString();
+                serialController.writeSerial(serialController.SET_MOTOR, (char)(motorSpeed));
+
+                double returnSpeed = serialController.getData();
+
+                if(serialController.Instruction == serialController.SET_MOTOR) MotorSpeedLabel.Text = returnSpeed.ToString();
 
                 //Config fan
-                serialController.writeSerial(serialController.SET_MOTOR, (char)(PI_val));
-                serialController.ReadSerial();
+               
 
             }
         }

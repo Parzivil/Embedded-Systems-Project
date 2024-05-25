@@ -1,7 +1,4 @@
-﻿using MySql.Data.MySqlClient;
-using MySqlConnector;
-
-namespace Embedded_Systems_Project
+﻿namespace Embedded_Systems_Project
 {
 
     internal class Database
@@ -13,18 +10,21 @@ namespace Embedded_Systems_Project
         public readonly string SERVER_NAME = "127.0.0.1";
         public readonly string USER_NAME = "ST123456";
         public readonly string DATABASE_NAME = "temperature_record";
-        public readonly string PASSWORD_NAME = "dmA5W-tO4MclEXkN";
+        public readonly string PASSWORD_NAME = "yMHW][Y33X6PLe!6";
         public readonly string TABLE_NAME = "temperature";
         public string connectionString;
+        public bool connected = false;
 
 
 
         public void connect()
         {
             connectionString = $"server={SERVER_NAME};user={USER_NAME};database={DATABASE_NAME};password={PASSWORD_NAME};";
-            
+
 
             mySqlConnection = new MySql.Data.MySqlClient.MySqlConnection(connectionString);
+
+            connected = true;
         }
 
 
@@ -34,13 +34,18 @@ namespace Embedded_Systems_Project
         /// <param name="data"></param>
         public void SendToDatabase(float data)
         {
-            mySqlConnection.Open();
-            string Query = "insert into " + DATABASE_NAME + "." + TABLE_NAME + "(timeStamp,temperature,remark) values('"
-                + DateTime.Now + "','" + data + "','" + USER_NAME + "');";
-            MySql.Data.MySqlClient.MySqlCommand Command = new(Query, mySqlConnection);
+            if (connected)
+            {
+                mySqlConnection.Open();
+                string Query = "insert into " + DATABASE_NAME + "." + TABLE_NAME + "(timeStamp,temperature,remark) values('"
+                    + DateTime.Now + "','" + data + "','" + USER_NAME + "');";
+                MySql.Data.MySqlClient.MySqlCommand Command = new(Query, mySqlConnection);
 
-            mySqlDataReader = Command.ExecuteReader(); //Exicute the command
-            mySqlConnection.Close();
+                mySqlDataReader = Command.ExecuteReader(); //Exicute the command
+                mySqlConnection.Close();
+            }
+
+            else MessageBox.Show("Database is not connected");
         }
     }
 }

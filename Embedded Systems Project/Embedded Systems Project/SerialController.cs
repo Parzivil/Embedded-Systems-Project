@@ -5,12 +5,13 @@ namespace Embedded_Systems_Project
     internal class SerialController
     {
         //Read instruction bytes
-        public readonly byte TXCHECK = 0x00;
+        public readonly byte TX_CHECK = 0x00;
         public readonly byte READ_PINA = 0x01;
         public readonly byte READ_POT1 = 0x02;
         public readonly byte READ_POT2 = 0x03;
         public readonly byte READ_TEMP = 0x04;
         public readonly byte READ_LIGHT = 0x05;
+        private readonly byte TX_RETURN = 0x0F;
 
         //Write instruction bytes
         public readonly byte SET_PORTC = 0x0A;
@@ -39,21 +40,44 @@ namespace Embedded_Systems_Project
         public int PORTC = 0x00;
         public char[] SevenSegDisplayChars = new char[2];
 
+        public Exception? Connect(string portName, int baudRate)
+        {
+            try
+            {
+                //Set a new serial port
+                serialPort = new SerialPort(portName, baudRate);
+
+                serialPort.Open(); //Open the serial port
+
+                if (serialPort.IsOpen)
+                {
+                    return null;
+                }
+                else
+                {
+                    return new Exception("Error on connection: " + portName + " is not open");
+                }
+            }
+            catch (Exception ex)
+            {
+                return new Exception("Connnection Error: " + ex.Message); //Show error message if conenction failed
+            }
+        }
 
         public byte Instruction
         {
-           get { return instructionByte;}
-  
+            get { return instructionByte; }
+
         }
 
         public byte FirstByte
         {
-            get{return firstByte;}
+            get { return firstByte; }
         }
 
         public byte SecondByte
         {
-            get{ return secondByte; }
+            get { return secondByte; }
         }
 
         public char getData()
@@ -67,22 +91,23 @@ namespace Embedded_Systems_Project
         /// </summary>
         public void ReadSerial()
         {
-            byte[] bytes = ReadSerialPackage();
-            if (bytes != null)
+            if (serialPort.IsOpen)
             {
-                if (bytes.Length > 4)
+                byte[] bytes = ReadSerialPackage();
+                if (bytes != null)
                 {
-                    instructionByte = bytes[1];
-                    firstByte = bytes[2];
-                    secondByte = bytes[3];
+                    if (bytes.Length > 4)
+                    {
+                        instructionByte = bytes[1];
+                        firstByte = bytes[2];
+                        secondByte = bytes[3];
+                    }
+                    else if (bytes.Length >= 3)
+                    {
+                        instructionByte = bytes[1];
+                    }
                 }
-                else if (bytes.Length >= 3)
-                {
-                    instructionByte = bytes[1];
-                }
-
-
-            }
+            }           
         }
         /// <summary>
         /// Reads the serial port and outputs a byte array containing the data read
@@ -93,32 +118,35 @@ namespace Embedded_Systems_Project
             List<byte> packageBytes = new(); //List to store bytes
             bool packageStartFound = false; //Boolen to store if the first byte is found
 
-            //Consistantly reads the serial port for bytes
-            for (int i = 0; i < 5; i++)
+            if (serialPort.IsOpen)
             {
-                if (serialPort.BytesToRead > 0)
+                //Consistantly reads the serial port for bytes
+                for (int i = 0; i < 5; i++)
                 {
-                    byte currentByte = (byte)serialPort.ReadByte();
-
-                    if (!packageStartFound && currentByte == START_BYTE)
+                    if (serialPort.BytesToRead > 0)
                     {
-                        packageStartFound = true;
-                        packageBytes.Add(currentByte);
-                    }
+                        byte currentByte = (byte)serialPort.ReadByte();
 
-                    else if (packageStartFound)
-                    {
-                        packageBytes.Add(currentByte);
-                        if (currentByte == STOP_BYTE)
+                        if (!packageStartFound && currentByte == START_BYTE)
                         {
-                            return packageBytes.ToArray();
+                            packageStartFound = true;
+                            packageBytes.Add(currentByte);
+                        }
+
+                        else if (packageStartFound)
+                        {
+                            packageBytes.Add(currentByte);
+                            if (currentByte == STOP_BYTE)
+                            {
+                                return packageBytes.ToArray();
+                            }
                         }
                     }
-                }
 
-                else
-                {
-                    break; //Break out of the loop if no bytes are found
+                    else
+                    {
+                        break; //Break out of the loop if no bytes are found
+                    }
                 }
             }
             return null;
@@ -129,7 +157,7 @@ namespace Embedded_Systems_Project
         /// </summary>
         public void DiscardSerial()
         {
-            _ = ReadSerialPackage();
+            if (serialPort.IsOpen) _ = ReadSerialPackage();
         }
 
 
@@ -144,7 +172,7 @@ namespace Embedded_Systems_Project
             byte[] bytes = { START_BYTE, instruction, STOP_BYTE };
             string output = System.Text.Encoding.Default.GetString(bytes);
 
-            serialPort.Write(output);
+            if (serialPort.IsOpen) serialPort.Write(output);
         }
         /// <summary>
         /// Sends instruction and data bytes to the serial device
@@ -160,7 +188,7 @@ namespace Embedded_Systems_Project
                             secondByte , //Send the second byte
                             STOP_BYTE };
 
-            serialPort.Write(bytes, 0, bytes.Length);
+            if(serialPort.IsOpen) serialPort.Write(bytes, 0, bytes.Length);
         }
         /// <summary>
         /// Sends a short with an instruction byte (auto converts short into bytes)
@@ -179,7 +207,7 @@ namespace Embedded_Systems_Project
             //string output = System.Text.Encoding.Default.GetString(bytes);
             //serialPort.WriteLine(output);
 
-            serialPort.Write(bytes, 0, bytes.Length);
+            if (serialPort.IsOpen) serialPort.Write(bytes, 0, bytes.Length);
         }
     }
 }
